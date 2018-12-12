@@ -40,4 +40,12 @@ JSON data will look like this:
 ```
 
 ## Usage
-$ python clean-data.py -a my_anvil_project.anvil -o my_cleaned_data_output.json
+$ python clean-data.py -f my_anvil_project.anvil -o my_cleaned_data_output.json
+
+### Options
+```
+-f              # input file (anvil file to be processed)
+-o              # output file 
+--fuzzy N       # include to fuzzy match groups with timestamps within N MILLISECONDS of one another (start and end)
+--sortbytime    # order groups by starting timestamp
+```
