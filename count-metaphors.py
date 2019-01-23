@@ -6,61 +6,67 @@ import xmltodict
 from json import loads, dumps
 from collections import OrderedDict
 
-def to_dict(input_ordered_dict):
-    return loads(dumps(input_ordered_dict))
-
-def add_data(name, track_dict):
-    if(name == 'Metaphor.Type3' or name == 'Metaphor.Type4'):
-        print len(track_dict)
-        print track_dict
-
-def process_raw_track(track):
-    processed_track = {}
-    processed_track['name'] = track[0][1]
-    n = processed_track['name']
-    processed_track['type'] = track[1][1]
-    track_data = to_dict(track[2][1])
-    if(n == 'Metaphor.Type3' or n == 'Metaphor.Type4'):
-        print track_data
-
-    entry = {}
-    if isinstance(track_data, list):
-        for instance in track_data:
-            entry = add_data(processed_track['name'], instance)
-    else:   # there's only one entry
-        entry = add_data(processed_track['name'], entry)
-
-    # print entry
-    processed_track['attributes'] = entry
-    # print processed_track
-
 def process_metaphor_tracks(tracks):
-    metaphor_counter = {}               # this will be a {metaphor: count} dict
+    metaphor_collector = {}               # this will be a {metaphor: count} dict
+    full_output = {}
 
     for track in tracks:
-        metaphor_counter = count_metaphors_per_track(metaphor_counter, track)
+        metaphor_collector = count_metaphors_per_track(metaphor_collector, track)
 
-    print metaphor_counter
+    add_overlaps(metaphor_collector)
 
 
 
-def count_metaphors_per_track(metaphor_counter, track):
+def count_metaphors_per_track(metaphor_collector, track):
     for element in track['el']:
         for attr in element['attribute']:
-            try:      
-                if attr['@name'] == 'Metaphor':
-                    metaphor = attr['#text']
-                    if(metaphor in metaphor_counter.keys()):
-                        metaphor_counter[metaphor] = metaphor_counter[metaphor] + 1
-                    else:
-                        metaphor_counter[metaphor] = 1
-            except:
-                print attr
-    return metaphor_counter
+            if attr['@name'] == 'Metaphor':
+                metaphor = attr['#text']
+                if(metaphor in metaphor_collector.keys()):
+                    metaphor_collector[metaphor]['count'] = metaphor_collector[metaphor]['count'] + 1
+                else:
+                    metaphor_collector[metaphor] = {}
+                    metaphor_collector[metaphor]['count'] = 1
+                    metaphor_collector[metaphor]['startend_pairs'] = []
+                    metaphor_collector[metaphor]['overlaps'] = []
+
+        # collect start/ends for later
+        metaphor_collector[metaphor]['startend_pairs'].append({'start': element['@start'], 'end': element['@end']})
+
+    return metaphor_collector
 
 
-def recurse_elements(track):
-    print
+def add_overlaps(metaphor_collector):
+    for k,v in metaphor_collector.iteritems():
+        for k2,v2 in metaphor_collector.iteritems():
+            if v == v2:                         # ignore overlaps with ourselves
+                break
+            num_overlaps = count_overlaps(v['startend_pairs'], v2['startend_pairs'])
+            for i in range(0, num_overlaps):
+                v['overlaps'].append(k2)
+    clean_overlaps(metaphor_collector)
+
+
+def count_overlaps(group1pairs, group2pairs):
+    overlaps = 0
+    for sepair in group1pairs:
+        for sepair2 in group2pairs: 
+            # now actually check if they overlap
+            s1 = float(sepair['start'])
+            e1 = float(sepair['end'])
+            s2 = float(sepair2['start'])
+            e2 = float(sepair2['end'])
+            if((s2 - e1 <= 0) or
+               (s1 - e2 <= 0)):
+                overlaps+=1
+
+    return overlaps
+
+
+# takes array of dictionaries and returns array of all keys in top level dictionaries from array
+def clean_overlaps(metaphor_collector):
+    for k, v in metaphor_collector.iteritems():
+        print k
 
 
 
