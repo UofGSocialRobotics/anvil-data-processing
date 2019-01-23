@@ -1,5 +1,7 @@
+this really will end up being multiple programs
+
 # anvil-data-processing
-Python tools to take in and clean, flatten, and group ANVIL video annotation data together by fuzzy-timestamp and group label with JSON output structure as follows: 
+Python tools to take in and clean, flatten, and group ANVIL video annotation data together by fuzzy-timestamp and group label with JSON output structure described below. Also provides computation specific to metaphor counting. For example, counts instances of particular metaphors, and most common metaphor overlaps.
 
 ex. if Anvil data looks like this: 
 ```
@@ -47,5 +49,39 @@ $ python clean-data.py -f my_anvil_project.anvil -o my_cleaned_data_output.json
 -f              # input file (anvil file to be processed)
 -o              # output file 
 --fuzzy N       # include to fuzzy match groups with timestamps within N MILLISECONDS of one another (start and end)
---sortbytime    # order groups by starting timestamp
+--full          # provide full output
 ```
+
+For instance 
+```
+$ python count-metaphors.py -f my_anvil_project.anvil -o metaphors.json
+```
+Will write JSON with this shape to metaphors.json
+```
+{
+    metadata: {
+        most_common: String                 // will be string of the most common metaphors
+        most_common_count:  int             // will be int of number of times this metaphor occurred
+        most_common_overlap: {
+            metaphors: [
+                String,
+                String
+            ]
+            count:                          // int
+        }
+    },
+    metaphors: [
+        {
+            metaphor: String
+            count: int
+            overlaps: {
+                metaphor_overlap: String    // String of which metaphor overlapped this one
+                count: int                  // count of number of times this overlap occurred
+            }
+            
+        },
+    ]
+}
+```
+
+
