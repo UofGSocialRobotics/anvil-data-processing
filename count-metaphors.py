@@ -15,6 +15,8 @@ def process_metaphor_tracks(tracks):
 
     add_overlaps(metaphor_collector)
 
+    print metaphor_collector
+
 
 
 def count_metaphors_per_track(metaphor_collector, track):
@@ -66,7 +68,18 @@ def count_overlaps(group1pairs, group2pairs):
 # takes array of dictionaries and returns array of all keys in top level dictionaries from array
 def clean_overlaps(metaphor_collector):
     for k, v in metaphor_collector.iteritems():
-        print k
+        duplicated_overlaps = v['overlaps']
+        v['overlaps'] = []
+        overlappers = set(duplicated_overlaps)
+        for overlap in overlappers:
+            # count instances to make it presentable
+            ol = {
+                'metaphor_overlap': overlap,
+                'count': duplicated_overlaps.count(overlap)
+            }
+            v['overlaps'].append(ol)
+
+        
 
 
 
