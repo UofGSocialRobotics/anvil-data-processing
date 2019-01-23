@@ -38,14 +38,25 @@ def process_metaphor_tracks(tracks):
     metaphor_counter = {}               # this will be a {metaphor: count} dict
 
     for track in tracks:
-        count_metaphors_per_track(metaphor_counter, track)
+        metaphor_counter = count_metaphors_per_track(metaphor_counter, track)
+
+    print metaphor_counter
 
 
 
 def count_metaphors_per_track(metaphor_counter, track):
     for element in track['el']:
-        print element
-    print
+        for attr in element['attribute']:
+            try:      
+                if attr['@name'] == 'Metaphor':
+                    metaphor = attr['#text']
+                    if(metaphor in metaphor_counter.keys()):
+                        metaphor_counter[metaphor] = metaphor_counter[metaphor] + 1
+                    else:
+                        metaphor_counter[metaphor] = 1
+            except:
+                print attr
+    return metaphor_counter
 
 
 def recurse_elements(track):
@@ -54,7 +65,6 @@ def recurse_elements(track):
 
 
 def read_file(fileName):
-    print(fileName)
     with open('megyn-kelly-4.anvil') as fd:
         doc = xmltodict.parse(fd.read())
         tracks = doc['annotation']['body']['track']
