@@ -1,7 +1,7 @@
 # anvil-data-processing
-Python tools to take in and clean, flatten, and group ANVIL video annotation data together by fuzzy-timestamp and group label with JSON output structure as follows: 
+Python tools to take in and clean, flatten, and group ANVIL video annotation data together by fuzzy-timestamp and group label with JSON output structure as follows:
 
-ex. if Anvil data looks like this: 
+ex. if Anvil data looks like this:
 ```
 <el index="39" start="101.2" end="103.53">
     <attribute name="labelA-0">5</attribute>
@@ -28,7 +28,7 @@ JSON data will look like this:
               "labels": {
                   "labelA-0": 5
                   "labelA-1": "this is a quote from the video"
-                  "labelA-2": "this is custom datatype 0" 
+                  "labelA-2": "this is custom datatype 0"
                   "labelB-0": "Speaker 0"
                   "labelB-1": 0
               }
@@ -40,12 +40,12 @@ JSON data will look like this:
 ```
 
 ## Usage
-$ python clean-data.py -f my_anvil_project.anvil -o my_cleaned_data_output.json
+$ python input.py my_anvil_project.anvil my_cleaned_data_output.json [--fuzzy N] [--sortbytime T/F]
 
 ### Options
 ```
 -f              # input file (anvil file to be processed)
--o              # output file 
+-o              # output file
 --fuzzy N       # include to fuzzy match groups with timestamps within N MILLISECONDS of one another (start and end)
 --sortbytime    # order groups by starting timestamp
 ```

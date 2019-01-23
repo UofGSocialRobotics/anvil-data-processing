@@ -34,39 +34,33 @@ def process_raw_track(track):
     processed_track['attributes'] = entry
     # print processed_track
 
-def deep_print(d):
-    if isinstance(d, dict):
-        for k,v in d.items():
-            print k
-            deep_print(v)
-    elif isinstance(d, list):
-        for elem in d:
-            deep_print(elem)
-    else:
-        print d
+def process_metaphor_tracks(tracks):
+    metaphor_counter = {}               # this will be a {metaphor: count} dict
+
+    for track in tracks:
+        count_metaphors_per_track(metaphor_counter, track)
+
+
+
+def count_metaphors_per_track(metaphor_counter, track):
+    for element in track['el']:
+        print element
+    print
+
+
+def recurse_elements(track):
+    print
+
 
 
 def read_file(fileName):
     print(fileName)
-    # get the raw data as big old ugly list
-    raw = xmltodict.parse(fileName).items()[0][1].items()
-    rawDict = to_dict(raw)
-    deep_print(rawDict[1])
-    # get some useful metadata
-    # metadata = raw[0][1].items()
-    # specificationFileName = metadata[0][1].items()[0][1]
-    # videoName = metadata[1][1].items()[0][1]
-    # coder = metadata[2][1][0].items()[2][1]
-    #
-    # # parse out group sections
-    # rawTracks = raw[1][1].items()[0][1]
-    # tracks = []
-    # # gross here, should do something clever about recursing instead of
-    # # making this specific to my annotation scheme
-    # for track in rawTracks:
-    #     t = process_raw_track(track.items())
-    #     tracks.append(t)
-    # print
+    with open('megyn-kelly-4.anvil') as fd:
+        doc = xmltodict.parse(fd.read())
+        tracks = doc['annotation']['body']['track']
+        process_metaphor_tracks(tracks[:4])
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some inputs.')
