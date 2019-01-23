@@ -74,10 +74,12 @@ Will write JSON with this shape to metaphors.json
         {
             metaphor: String
             count: int
-            overlaps: {
-                metaphor_overlap: String    // String of which metaphor overlapped this one
-                count: int                  // count of number of times this overlap occurred
-            }
+            overlaps: [
+                {
+                    metaphor_overlap: String    // String of which metaphor overlapped this one
+                    count: int                  // count of number of times this overlap occurred
+                },
+            ]
             
         },
     ]
