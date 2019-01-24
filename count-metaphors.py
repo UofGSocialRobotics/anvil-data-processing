@@ -3,7 +3,7 @@ import sys
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import xmltodict
-from json import loads, dumps
+import json
 from collections import OrderedDict
 
 def process_metaphor_tracks(tracks):
@@ -14,8 +14,7 @@ def process_metaphor_tracks(tracks):
         metaphor_collector = count_metaphors_per_track(metaphor_collector, track)
 
     add_overlaps(metaphor_collector)
-
-    print metaphor_collector
+    return metaphor_collector
 
 
 
@@ -78,16 +77,19 @@ def clean_overlaps(metaphor_collector):
                 'count': duplicated_overlaps.count(overlap)
             }
             v['overlaps'].append(ol)
-
+            v['startend_pairs'] = []
         
 
 
 
-def read_file(fileName):
+def read_file(inputFile, outputFile):
     with open('megyn-kelly-4.anvil') as fd:
         doc = xmltodict.parse(fd.read())
         tracks = doc['annotation']['body']['track']
-        process_metaphor_tracks(tracks[:4])
+        data = process_metaphor_tracks(tracks[:4])
+        with open('output.json', 'w') as outfile:
+            json.dump(data, outfile)
+
 
 
 
@@ -103,4 +105,4 @@ if __name__ == "__main__":
                         help='order groups by starting timestamp')
 
     args = parser.parse_args()
-    read_file(args.infile)
+    read_file(args.infile, args.outfile)
