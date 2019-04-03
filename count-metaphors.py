@@ -11,8 +11,12 @@ def prettyPrint(uglyJson):
     print(dumps(uglyJson, indent=4, sort_keys=True))
 
 ## so this deffo builds the json in a nice structure
-def build_json():
-    tree = ET.parse('megyn-kelly-4.anvil')
+def build_json(which_tho):
+    tree = None
+    if(which_tho == 1):
+        tree = ET.parse('megyn-kelly-4.anvil')
+    else:
+        tree = ET.parse('megyn-kelly-4-plus1.anvil')
     json_structure = {}
     current_track = ""
     for elem in tree.iter():
@@ -29,31 +33,39 @@ def build_json():
         elif(elem.tag == "attribute"):
             #print elem.attrib
             json_structure[current_track][current_index][elem.attrib["name"]] = elem.text
-    prettyPrint(json_structure)
 
+    return(json_structure)
 
-def compute_diffs(metas1, metas2):
-    print metas1
+def check_shape(json1, json2):
+    if(set(json1.keys()) != set(json2.keys())):
+        return False
+    return True
+
+def compute_diffs_per_track(track1, track2):
+    prettyPrint(track1)
+    prettyPrint(track2)
+    # check for overlaps, basically
+    # if any item doesn't have an overlap, it's a difference
+    for elem1 in track1:
+        for elem2 in track2:
+            if()
     print
-    print metas2
+
+
+def compute_diffs(json1, json2):
+    for key in json1.keys():
+        compute_diffs_per_track(json1[key], json2[key])
+
     return
 
 
 def read_file(fileName, comp_fileName):
-    test_iterate()
-    # comp_fileName = True
-    # with open('megyn-kelly-4.anvil') as fd:
-    #     doc = xmltodict.parse(fd.read())
-    #     tracks = doc['annotation']['body']['track']
-    #     metaphors = get_metaphor_collector(tracks)
-    #
-    #     if(comp_fileName):
-    #         with open('megyn-kelly-4-plus1.anvil') as compfile:
-    #             comp_doc = xmltodict.parse(compfile.read())
-    #             comp_tracks = comp_doc['annotation']['body']['track']
-    #             comp_metaphors = get_metaphor_collector(comp_tracks)
-    #             compute_diffs(metaphors, comp_metaphors)
-    # return
+    json1 = build_json(1)
+    json2 = build_json(2)
+
+    check_shape(json1, json2)
+
+    compute_diffs(json1, json2)
 
 
 
