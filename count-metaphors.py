@@ -4,92 +4,56 @@ from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import xmltodict
 import json
+from json import loads, dumps
 from collections import OrderedDict
 
-def process_metaphor_tracks(tracks):
-    metaphor_collector = {}               # this will be a {metaphor: count} dict
-    full_output = {}
+def prettyPrint(uglyJson):
+    print(dumps(uglyJson, indent=4, sort_keys=True))
 
-    for track in tracks:
-        metaphor_collector = count_metaphors_per_track(metaphor_collector, track)
-
-    add_overlaps(metaphor_collector)
-    return metaphor_collector
-
-
-
-def count_metaphors_per_track(metaphor_collector, track):
-    for element in track['el']:
-        for attr in element['attribute']:
-            if attr['@name'] == 'Metaphor':
-                metaphor = attr['#text']
-                if(metaphor in metaphor_collector.keys()):
-                    metaphor_collector[metaphor]['count'] = metaphor_collector[metaphor]['count'] + 1
-                else:
-                    metaphor_collector[metaphor] = {}
-                    metaphor_collector[metaphor]['count'] = 1
-                    metaphor_collector[metaphor]['startend_pairs'] = []
-                    metaphor_collector[metaphor]['overlaps'] = []
-
-        # collect start/ends for later
-        metaphor_collector[metaphor]['startend_pairs'].append({'start': element['@start'], 'end': element['@end']})
-
-    return metaphor_collector
+## so this deffo builds the json in a nice structure
+def build_json():
+    tree = ET.parse('megyn-kelly-4.anvil')
+    json_structure = {}
+    current_track = ""
+    for elem in tree.iter():
+        toPrint = [elem.tag, elem.text, elem.attrib]
+        # relies on this being in order.
+        if(elem.tag == "track"):
+            current_track = elem.attrib["name"]
+            json_structure[current_track] = {}
+        elif(elem.tag == "el"):
+            current_index = elem.attrib["index"]
+            json_structure[current_track][current_index] = {}
+            json_structure[current_track][current_index]["start"] = elem.attrib["start"]
+            json_structure[current_track][current_index]["end"] = elem.attrib["end"]
+        elif(elem.tag == "attribute"):
+            #print elem.attrib
+            json_structure[current_track][current_index][elem.attrib["name"]] = elem.text
+    prettyPrint(json_structure)
 
 
-def add_overlaps(metaphor_collector):
-    for k,v in metaphor_collector.iteritems():
-        for k2,v2 in metaphor_collector.iteritems():
-            if v == v2:                         # ignore overlaps with ourselves
-                break
-            num_overlaps = count_overlaps(v['startend_pairs'], v2['startend_pairs'])
-            for i in range(0, num_overlaps):
-                v['overlaps'].append(k2)
-    clean_overlaps(metaphor_collector)
+def compute_diffs(metas1, metas2):
+    print metas1
+    print
+    print metas2
+    return
 
 
-def count_overlaps(group1pairs, group2pairs):
-    overlaps = 0
-    for sepair in group1pairs:
-        for sepair2 in group2pairs: 
-            # now actually check if they overlap
-            s1 = float(sepair['start'])
-            e1 = float(sepair['end'])
-            s2 = float(sepair2['start'])
-            e2 = float(sepair2['end'])
-            if((s2 - e1 <= 0) or
-               (s1 - e2 <= 0)):
-                overlaps+=1
-
-    return overlaps
-
-
-# takes array of dictionaries and returns array of all keys in top level dictionaries from array
-def clean_overlaps(metaphor_collector):
-    for k, v in metaphor_collector.iteritems():
-        duplicated_overlaps = v['overlaps']
-        v['overlaps'] = []
-        overlappers = set(duplicated_overlaps)
-        for overlap in overlappers:
-            # count instances to make it presentable
-            ol = {
-                'metaphor_overlap': overlap,
-                'count': duplicated_overlaps.count(overlap)
-            }
-            v['overlaps'].append(ol)
-            v['startend_pairs'] = []
-        
-
-
-
-def read_file(inputFile, outputFile):
-    with open('megyn-kelly-4.anvil') as fd:
-        doc = xmltodict.parse(fd.read())
-        tracks = doc['annotation']['body']['track']
-        data = process_metaphor_tracks(tracks[:4])
-        with open('output.json', 'w') as outfile:
-            json.dump(data, outfile)
-
+def read_file(fileName, comp_fileName):
+    test_iterate()
+    # comp_fileName = True
+    # with open('megyn-kelly-4.anvil') as fd:
+    #     doc = xmltodict.parse(fd.read())
+    #     tracks = doc['annotation']['body']['track']
+    #     metaphors = get_metaphor_collector(tracks)
+    #
+    #     if(comp_fileName):
+    #         with open('megyn-kelly-4-plus1.anvil') as compfile:
+    #             comp_doc = xmltodict.parse(compfile.read())
+    #             comp_tracks = comp_doc['annotation']['body']['track']
+    #             comp_metaphors = get_metaphor_collector(comp_tracks)
+    #             compute_diffs(metaphors, comp_metaphors)
+    # return
 
 
 
@@ -97,6 +61,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some inputs.')
     parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
                         default=sys.stdin)
+    parser.add_argument('comp_file', nargs='?', type=argparse.FileType('r'))
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
                         default=sys.stdout)
     parser.add_argument('--fuzzy', type=int, default=0,
@@ -105,4 +70,4 @@ if __name__ == "__main__":
                         help='order groups by starting timestamp')
 
     args = parser.parse_args()
-    read_file(args.infile, args.outfile)
+    read_file(args.infile, args.comp_file)
