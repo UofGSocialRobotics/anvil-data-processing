@@ -8,19 +8,69 @@ from json import loads, dumps
 from collections import OrderedDict
 
 
-track_attributes_to_diff = [
-    "Metaphor"
-]
 
+## Utils
+flatten = lambda l: [item for sublist in l for item in sublist]
 
 def prettyPrint(uglyJson):
     print(dumps(uglyJson, indent=4, sort_keys=True))
+
+
+## Building globals
+def build_diff_attributes(names, attributes):
+    track_attributes_to_diff = {}
+    for name in names:
+        ta_to_d = {
+            "attributes": attributes
+        }
+        track_attributes_to_diff[name] = ta_to_d
+
+    return track_attributes_to_diff
+
+tracks_to_diff = [
+    "Metaphor.Type1",
+    "Metaphor.Type2",
+    "Metaphor.Type3",
+    "Metaphor.Type4",
+]
+
+attributes_to_diff = [
+    "Metaphor"
+]
+
+track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
+prettyPrint(track_attributes_to_diff)
+#     {
+#         "track_name": "Metaphor.Type1",
+#         "attributes": [
+#             "Metaphor"
+#         ]
+#     },
+#     {
+#         "track_name": "Metaphor.Type2",
+#         "attributes": [
+#             "Metaphor"
+#         ]
+#     },
+#     {
+#         "track_name": "Metaphor.Type3",
+#         "attributes": [
+#             "Metaphor"
+#         ]
+#     },
+#     {
+#         "track_name": "Metaphor.Type4",
+#         "attributes": [
+#             "Metaphor"
+#         ]
+#     },
+# ]
 
 ## so this deffo builds the json in a nice structure
 def build_json(which_tho):
     tree = None
     if(which_tho == 1):
-        tree = ET.parse('megyn-kelly-4.anvil')
+        tree = ET.parse('megyn-kelly-4-plus2.anvil')
     else:
         tree = ET.parse('megyn-kelly-4-plus1.anvil')
     json_structure = {}
@@ -70,39 +120,75 @@ def overlaps(elem1, elem2):
 
     return overlaps
 
-
-## hmm so right now this works but it's non-symmetric. 
-def compute_diffs_per_track(track1, track2):
-    #prettyPrint(track2)
+def compute_diffs_from_reference_track(reference_track, other_track, trackName):
     # check for overlaps, basically
     # if any item doesn't have an overlap, it's a difference
     # at first, assume independence. I can change it so it searches over all metaphors later.
     track_diffs = []
-
+    try:
+        track_to_diff = track_attributes_to_diff[trackName]
+    # we don't actually care about diffing anything in this track
+    except:
+        print 'Excluding diff calculation for track ' + trackName
+        return []
+    attributes_to_diff = track_to_diff["attributes"]
     # nested for loop, not my finest work.
-    for elem1 in track1:
-        t1 = track1[elem1]
+    for elem1 in reference_track:
+        t1 = reference_track[elem1]
         found_diff = True
-        for elem2 in track2:
-            t2 = track2[elem2]
+        no_overlaps = True
+        for elem2 in other_track:
+            t2 = other_track[elem2]
             # also need to tell it what attributes to pay attention to
-            for attribute in track_attributes_to_diff:
+            for attribute in attributes_to_diff:
                 # if we find something overlapping here, it's not a difference
-                if(overlaps(t1, t2) and t1[attribute] == t2[attribute]):
-                    found_diff = False
+                if overlaps(t1, t2):
+                    no_overlaps = False
+                    if t1[attribute] == t2[attribute]:
+                        found_diff = False
         if found_diff:
-            print "FOUND DIFF!!"
-            print t1
-            print t2
+            diff = {}
+            if no_overlaps:
+                diff = {
+                    "File1": t1,
+                    "File2": "No corresponding annotation found"
+                }
+            else:
+                diff = {
+                    "File1": t1,
+                    "File2": t2
+                }
+            track_diffs.append(diff)
 
-    print
+    return track_diffs
+
+
+
+## hmm so right now this works but it's non-symmetric.
+def compute_diffs_per_track(track1, track2, trackName):
+    # at first, assume independence. I can change it so it searches over all metaphors later.
+    track_diffs = {}
+    track_diffs[trackName] = []
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track1, track2, trackName))
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track2, track1, trackName))
+    track_diffs[trackName] = flatten(track_diffs[trackName])
+    if not track_diffs[trackName]:
+        # return None if empty list
+        return
+    return track_diffs
 
 
 def compute_diffs(json1, json2):
+    track_diffs = []
     for key in json1.keys():
-        if key == "Metaphor.Type2":
-            compute_diffs_per_track(json2[key], json1[key])
-
+        diffs = compute_diffs_per_track(json1[key], json2[key], key)
+        if diffs:
+            track_diffs.append(diffs)
+    if not track_diffs:
+        print "No diffs were found in the annotation files"
+    else:
+        print "Diffs were found in annotation file:"
+        prettyPrint(track_diffs)
     return
 
 
@@ -110,7 +196,8 @@ def read_file(fileName, comp_fileName):
     json1 = build_json(1)
     json2 = build_json(2)
 
-    check_shape(json1, json2)
+    if(not check_shape(json1, json2)):
+        print "ERROR SHAPES ARE DIFFERENT"
 
     compute_diffs(json1, json2)
 
