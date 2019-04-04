@@ -7,6 +7,12 @@ import json
 from json import loads, dumps
 from collections import OrderedDict
 
+
+track_attributes_to_diff = [
+    "Metaphor"
+]
+
+
 def prettyPrint(uglyJson):
     print(dumps(uglyJson, indent=4, sort_keys=True))
 
@@ -41,20 +47,61 @@ def check_shape(json1, json2):
         return False
     return True
 
+def overlaps(elem1, elem2):
+    ## check that start and end time overlap in some way
+    s1= elem1["start"]
+    s2= elem2["start"]
+    e1= elem1["end"]
+    e2= elem2["end"]
+
+    overlaps = False
+
+    # majority of cases, get this out of the way
+    if (s1 > e2 or s2 > e1):
+        return False
+    elif (s1 >= s2 and e2 >= s1):
+        overlaps = True
+    elif (e1 >= s2 and e2 >= e1):
+        overlaps = True
+    elif (s1 >= s2 and e2 >= e1):
+        overlaps = True
+    elif (e1 >= e2 and s2 >= s1):
+        overlaps = True
+
+    return overlaps
+
+
+## hmm so right now this works but it's non-symmetric. 
 def compute_diffs_per_track(track1, track2):
-    prettyPrint(track1)
-    prettyPrint(track2)
+    #prettyPrint(track2)
     # check for overlaps, basically
     # if any item doesn't have an overlap, it's a difference
+    # at first, assume independence. I can change it so it searches over all metaphors later.
+    track_diffs = []
+
+    # nested for loop, not my finest work.
     for elem1 in track1:
+        t1 = track1[elem1]
+        found_diff = True
         for elem2 in track2:
-            if()
+            t2 = track2[elem2]
+            # also need to tell it what attributes to pay attention to
+            for attribute in track_attributes_to_diff:
+                # if we find something overlapping here, it's not a difference
+                if(overlaps(t1, t2) and t1[attribute] == t2[attribute]):
+                    found_diff = False
+        if found_diff:
+            print "FOUND DIFF!!"
+            print t1
+            print t2
+
     print
 
 
 def compute_diffs(json1, json2):
     for key in json1.keys():
-        compute_diffs_per_track(json1[key], json2[key])
+        if key == "Metaphor.Type2":
+            compute_diffs_per_track(json2[key], json1[key])
 
     return
 
