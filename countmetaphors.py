@@ -5,7 +5,7 @@ import xml.etree.ElementTree as ET
 import xmltodict
 import json
 from json import loads, dumps
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 
 
@@ -34,11 +34,44 @@ tracks_to_diff = [
     "Metaphor.Type4",
 ]
 
+
 attributes_to_diff = [
     "Metaphor"
 ]
 
 track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
+
+
+
+############ CUSTOM STUFF ############
+######################################
+## Lots of custom stuff to collapse ##
+## tracks into one so that we can   ##
+## compare multiple metaphors on    ##
+## the same track                   ##
+######################################
+
+## Takes json that has dict for all the tracks you want to
+## collapse, puts them all into one dict.
+def collapse_tracks(json_struct, tracks_to_collapse):
+    dd = defaultdict(list)
+    dics = []
+
+    for track in tracks_to_collapse:
+        dics.append(json_struct[track])
+    # d1 = json_struct["Metaphor.Type1"]
+    # d2 = json_struct["Metaphor.Type2"]
+    # d3 = json_struct["Metaphor.Type3"]
+    # d4 = json_struct["Metaphor.Type4"]
+
+    for dic in dics:
+        for key, val in dic.iteritems():  # .items() in Python 3.
+            dd[key].append(val)
+
+    prettyPrint(dd)
+
+    return dd
+
 
 ## so this deffo builds the json in a nice structure
 def build_json(fileName):
@@ -114,10 +147,11 @@ def overlaps(elem1, elem2):
 
     return overlaps
 
-def compute_diffs_from_reference_track(reference_track, other_track, trackName, fn1, fn2):
-    # check for overlaps, basically
-    # if any item doesn't have an overlap, it's a difference
-    # at first, assume independence. I can change it so it searches over all metaphors later.
+
+# check for overlaps, basically
+# if any item doesn't have an overlap, it's a difference
+# at first, assume independence. I can change it so it searches over all metaphors later.
+def compute_diffs_from_reference_track(reference_track, comparison_track, trackName, fn1, fn2):
     track_diffs = []
     try:
         track_to_diff = track_attributes_to_diff[trackName]
@@ -129,15 +163,13 @@ def compute_diffs_from_reference_track(reference_track, other_track, trackName, 
     # nested for loop, not my finest work.
     for elem1 in reference_track:
         t1 = reference_track[elem1]
-        found_diff = True
+        found_diff = True       ## assume it's a difference until we find otherwise
         no_overlaps = True
-        for elem2 in other_track:
-            t2 = other_track[elem2]
-            # also need to tell it what attributes to pay attention to
+        for elem2 in comparison_track:
+            t2 = comparison_track[elem2]
             for attribute in attributes_to_diff:
-                # if we find something overlapping here, it's not a difference
-                if overlaps(t1, t2):
-                    no_overlaps = False
+                if overlaps(t1, t2):        # if we find something overlapping here, it could be the same!
+                    no_overlaps = False     # at least we know for sure something is overlapping.
                     if t1[attribute] == t2[attribute]:
                         found_diff = False
         if found_diff:
@@ -193,7 +225,7 @@ def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
         return
     else:
         print "diffs:"
-        prettyPrint(track_diffs)
+        # prettyPrint(track_diffs)
         return track_diffs
 
 
@@ -203,7 +235,6 @@ def read_file(fileName, comp_fileName):
     json2 = build_json('test-annotation-2.anvil')
 
     return compute_diffs(json1, json2, fileName, comp_fileName)
-
 
 
 if __name__ == "__main__":

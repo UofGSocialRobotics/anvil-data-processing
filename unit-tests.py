@@ -314,5 +314,36 @@ class TestStringMethods(unittest.TestCase):
         }
         self.assertIsNotNone(compute_diffs(i1, i2, "Test1", "Test2"))
 
+
+    ## Combine Tracks oh jesus
+    def test_collapse_tracks(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "0.2",
+                    "end": "1.3"
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+            "Metaphor.Type3": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test3",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+        }
+        self.assertIsNotNone(collapse_tracks(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3']))
+
 if __name__ == '__main__':
     unittest.main()
