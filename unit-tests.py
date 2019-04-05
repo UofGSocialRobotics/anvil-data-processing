@@ -1,6 +1,7 @@
 import unittest
 from countmetaphors import *
 
+
 class TestStringMethods(unittest.TestCase):
 
     def test_upper(self):
@@ -120,6 +121,16 @@ class TestStringMethods(unittest.TestCase):
             "test2": {}
         }
         self.assertFalse(check_shape(i1, i2))
+    def test_shape_layer_one_type_symmetric(self):
+        i1 = {
+            "test1": [],
+            "test2": []
+        }
+        i2 = {
+            "test1": [],
+            "test2": {}
+        }
+        self.assertFalse(check_shape(i1, i2))
     def test_shape_layer_two(self):
         i1 = {
             "test1": [],
@@ -139,6 +150,15 @@ class TestStringMethods(unittest.TestCase):
             "test2": {}
         }
         self.assertFalse(check_shape(i1, i2))
+    def test_shape_extra_attrs(self):
+        i1 = {
+            "test1": []
+        }
+        i2 = {
+            "test1": [],
+            "test2": {}
+        }
+        self.assertFalse(check_shape(i1, i2))
     def test_shape_data_doesnt_matter(self):
         i1 = {
             "test1": ["Hello", "How are you"],
@@ -149,6 +169,150 @@ class TestStringMethods(unittest.TestCase):
             "test2": {}
         }
         self.assertTrue(check_shape(i1, i2))
+    def test_shape_one_examples(self):
+        i1 = build_json('test-annotation-1.anvil')
+        i2 = build_json('test-annotation-1.anvil')
+        self.assertTrue(check_shape(i1, i2))
+
+    def test_shape_two_examples(self):
+        i1 = build_json('test-annotation-1.anvil')
+        i2 = build_json('test-annotation-2.anvil')
+        self.assertTrue(check_shape(i1, i2))
+
+    ## Checking some pre-made test annotations
+    def test_shape_spec1(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "",
+                    "start": "",
+                    "end": ""
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "",
+                    "start": "",
+                    "end": ""
+                }
+            },
+            "Metaphor.Type3": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "",
+                    "start": "",
+                    "end": ""
+                }
+            },
+        }
+        i2 = build_json('test-annotation-1.anvil')
+        self.assertTrue(check_shape(i1, i2))
+
+    ## Testing diff functionality now
+    def test_diff_bad_shape(self):
+        i1 = {
+            "Metaphor.Type1": [],
+            "Metaphor.Type2": []
+        }
+        i2 = {
+            "Metaphor.Type1": [],
+            "Metaphor.Type2": {}
+        }
+        self.assertIsNone(compute_diffs(i1, i2))
+
+    def test_diff_simple_same(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        self.assertIsNone(compute_diffs(i1, i2))
+
+    def test_diff_simple_diff_nooverlap(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "3",
+                    "end": "4"
+                }
+            }
+        }
+        self.assertIsNotNone(compute_diffs(i1, i2, "Nooverlap1", "Nooverlap2"))
+
+    def test_diff_simple_diff_overlap(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1.5",
+                    "end": "2.5"
+                }
+            }
+        }
+        self.assertIsNone(compute_diffs(i1, i2))
+
+    def test_diff_simple_diff_metaphor(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1.5",
+                    "end": "2.5"
+                }
+            }
+        }
+        self.assertIsNotNone(compute_diffs(i1, i2, "Test1", "Test2"))
 
 if __name__ == '__main__':
     unittest.main()

@@ -41,12 +41,8 @@ attributes_to_diff = [
 track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
 
 ## so this deffo builds the json in a nice structure
-def build_json(which_tho):
-    tree = None
-    if(which_tho == 1):
-        tree = ET.parse('megyn-kelly-4-plus2.anvil')
-    else:
-        tree = ET.parse('megyn-kelly-4-plus1.anvil')
+def build_json(fileName):
+    tree = ET.parse(fileName)
     json_structure = {}
     current_track = ""
     for elem in tree.iter():
@@ -66,15 +62,33 @@ def build_json(which_tho):
 
     return(json_structure)
 
+## check that the two jsons have the same general shape (dictionaries only)
+## will not work if contains list of dicts and you want to typecheck those...
+## too difficult and doesn't matter for this use case.
+## NOTE this requires at least one annotation per track
 def check_shape(json1, json2):
-    dict_same = [True]
+    dict_same = []
     if(set(json1.keys()) != set(json2.keys())):
         return False
     for key in json1.keys():
         if type(json1[key]) != type(json2[key]):
             return False
+        # if it's a dict, check all the way down (provided both items)
+        # have shapes to check
         if type(json1[key]) == dict:
-            dict_same.append(check_shape(json1[key], json2[key]))
+            # both non-empty dicts
+            if bool(json1[key]) and bool(json2[key]):
+                # this would normally just be json1[key] and json2[key]
+                # but because of the way the xml gets structures it turns
+                # into a dictionary with more elements, not a list of dictionary.
+                dict_same.append(check_shape(json1[key]["0"], json2[key]["0"]))
+            # both empty dicts
+            elif not bool(json1[key]) and not bool(json2[key]):
+                dict_same.append(True)
+            # one empty, one non-empty dict
+            else:
+                dict_same.append(False)
+
     return all(dict_same)
 
 def overlaps(elem1, elem2):
@@ -100,7 +114,7 @@ def overlaps(elem1, elem2):
 
     return overlaps
 
-def compute_diffs_from_reference_track(reference_track, other_track, trackName):
+def compute_diffs_from_reference_track(reference_track, other_track, trackName, fn1, fn2):
     # check for overlaps, basically
     # if any item doesn't have an overlap, it's a difference
     # at first, assume independence. I can change it so it searches over all metaphors later.
@@ -130,13 +144,13 @@ def compute_diffs_from_reference_track(reference_track, other_track, trackName):
             diff = {}
             if no_overlaps:
                 diff = {
-                    "File1": t1,
-                    "File2": "No corresponding annotation found"
+                    fn1: t1,
+                    fn2: "No corresponding annotation found"
                 }
             else:
                 diff = {
-                    "File1": t1,
-                    "File2": t2
+                    fn1: t1,
+                    fn2: t2
                 }
             track_diffs.append(diff)
 
@@ -145,41 +159,50 @@ def compute_diffs_from_reference_track(reference_track, other_track, trackName):
 
 
 ## hmm so right now this works but it's non-symmetric.
-def compute_diffs_per_track(track1, track2, trackName):
+def compute_diffs_per_track(track1, track2, trackName, fn1, fn2):
     # at first, assume independence. I can change it so it searches over all metaphors later.
     track_diffs = {}
     track_diffs[trackName] = []
-    track_diffs[trackName].append(compute_diffs_from_reference_track(track1, track2, trackName))
-    track_diffs[trackName].append(compute_diffs_from_reference_track(track2, track1, trackName))
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track1, track2, trackName, fn1, fn2))
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track2, track1, trackName, fn2, fn1))
     track_diffs[trackName] = flatten(track_diffs[trackName])
     if not track_diffs[trackName]:
         # return None if empty list
         return
+
+    # need to dedupe list of true conflicts
+    # thanks SO: https://stackoverflow.com/questions/9427163/remove-duplicate-dict-in-list-in-python
+    # use dict comparison, so only keep elements that are not in rest of initial list
+    # -- only accessible through index n, hence use of enumerate
+    track_diffs[trackName] = [i for n, i in enumerate(track_diffs[trackName]) if i not in track_diffs[trackName][n + 1:]]
     return track_diffs
 
 
-def compute_diffs(json1, json2):
+def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
+    if(not check_shape(json1, json2)):
+        print "ERROR SHAPES ARE DIFFERENT"
+        return
+
     track_diffs = []
     for key in json1.keys():
-        diffs = compute_diffs_per_track(json1[key], json2[key], key)
+        diffs = compute_diffs_per_track(json1[key], json2[key], key, fn1, fn2)
         if diffs:
             track_diffs.append(diffs)
+
     if not track_diffs:
-        print "No diffs were found in the annotation files"
+        return
     else:
-        print "Diffs were found in annotation file:"
+        print "diffs:"
         prettyPrint(track_diffs)
-    return
+        return track_diffs
 
 
 def read_file(fileName, comp_fileName):
-    json1 = build_json(1)
-    json2 = build_json(2)
+    # might want to refactor this to include name
+    json1 = build_json('test-annotation-1.anvil')
+    json2 = build_json('test-annotation-2.anvil')
 
-    if(not check_shape(json1, json2)):
-        print "ERROR SHAPES ARE DIFFERENT"
-
-    compute_diffs(json1, json2)
+    return compute_diffs(json1, json2, fileName, comp_fileName)
 
 
 
