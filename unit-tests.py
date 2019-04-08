@@ -380,5 +380,82 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(actual_output.keys(), ["Metaphor.Type4", "Metaphors"])
         self.assertEqual(actual_output["Metaphors"].keys(), expected_output["Metaphors"].keys())
 
+    ## TODO test actual known diffs
+    # def test_actual_diffs(self):
+    #     read_file('File1', 'File2')
+
+    ## lol these are more like integration tests
+    # def integration_build_collapse(self):
+    #     self.assertEqual(collapse_tracks(build_json('test-annotation-1.anvil')), collapse_tracks(build_json('test-annotation-2.anvil')))
+
+
+    ## test annotator agreements
+    def test_agreement_no_diffs(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1.5",
+                    "end": "2.5"
+                }
+            }
+        }
+        self.assertEqual(1, compute_inter_annotator_agreement(i1, i2, [], ['Metaphor.Type1']))
+
+    def test_agreement_some_diffs(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1.5",
+                    "end": "2.5"
+                }
+            }
+        }
+
+        diffs = [
+            {
+                "Metaphor.Type1": [
+                    {
+                        "Test1": {
+                            "Confidence": "",
+                            "Metaphor": "test1",
+                            "end": "2",
+                            "start": "1"
+                        },
+                        "Test2": {
+                            "Confidence": "",
+                            "Metaphor": "test2",
+                            "end": "2.5",
+                            "start": "1.5"
+                        }
+                    }
+                ]
+            }
+        ]
+        self.assertEqual(1, compute_inter_annotator_agreement(i1, i2, diffs, ['Metaphor.Type1']))
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,5 +1,6 @@
 import argparse
 import sys
+import math
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import xmltodict
@@ -220,6 +221,80 @@ def compute_diffs_per_track(track1, track2, trackName, fn1, fn2):
     return track_diffs
 
 
+
+
+#### TODO: implement cohen's kappa to calculate agreement if you have time
+# def count_instances_of_trackval(track, target_val):
+#     count = 0
+#     for key in track.keys():
+#         if track[key]["Metaphor"] == target_val:
+#             count += 1
+#     return count
+
+
+## Use cohen's kappa to calculate inter-annotator agreement on tracks we pay attention to.
+## information can be found here: https://en.wikipedia.org/wiki/Cohen%27s_kappa
+## "generally though tto be a more robust measure than simple percentage agreement calculation,
+## as kappa takes into account the possibility of the agreement occurring by chance."
+# def compute_inter_annotator_agreement_per_track(track1, track2, track_diffs):
+#     p_o = # relative observed agreement among raters
+#     p_e = # hypothetical probability of chance agreement
+#     n = len(track1) # number of annotation instances
+#     ## TODO make this a variable
+#     k = 20 # number of options for annotation -- in this case 20 because 20 metaphor choices
+#     n_ki = # number of times rater i predicted category k
+#
+#     # count instances of predicting category k for
+#
+#     p_e = (1 / (math.pow(n, 2))) * math.sum()
+
+# diffs are formatted like this:
+# [
+#     {
+#         "Track1": [
+#             {diff},
+#             {diff},
+#         ]
+#     },
+#     {
+#         "Track2": [
+#             ...
+#         ]
+#     }
+# ]
+# so need to dig into structure a little more
+def get_total_diffs(diffs):
+    total_diffs = 0
+    for diff in diffs:
+        total_diffs += len(diff[diff.keys()[0]])
+        
+    return total_diffs
+
+
+
+def get_total_annotations_per_track(track):
+    total_annotations = 0
+    # only pay attention to the tracks we care about
+    for key in track.keys():
+        total_annotations += len(track[key])
+
+    return total_annotations
+
+def get_total_annotations_per_annotator(json_struct, to_diff=tracks_to_diff):
+    total_annotations = 0
+
+    for track in to_diff:
+        total_annotations += get_total_annotations_per_track(json_struct[track])
+
+    return total_annotations
+
+# simple percentage calculation. Literally look at all total annotations, and see
+# how many disagreed.
+def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_to_diff):
+    total_annotations = get_total_annotations_per_annotator(json1, to_diff) + get_total_annotations_per_annotator(json2, to_diff)
+    return (total_annotations - len(track_diffs)) / total_annotations
+
+
 def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
     if(not check_shape(json1, json2)):
         print "ERROR SHAPES ARE DIFFERENT"
@@ -235,7 +310,7 @@ def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
         return
     else:
         print "diffs:"
-        # prettyPrint(track_diffs)
+        prettyPrint(track_diffs)
         return track_diffs
 
 
@@ -243,7 +318,14 @@ def read_file(fileName, comp_fileName):
     # might want to refactor this to include name
     json1 = build_json('test-annotation-1.anvil')
     json2 = build_json('test-annotation-2.anvil')
-    return compute_diffs(json1, json2, fileName, comp_fileName)
+
+    prettyPrint(json1)
+    print
+    print
+
+    diffs = compute_diffs(json1, json2, fileName, comp_fileName)
+    prettyPrint(diffs)
+    return diffs
 
 
 if __name__ == "__main__":
