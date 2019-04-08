@@ -3,20 +3,10 @@ from countmetaphors import *
 
 
 class TestStringMethods(unittest.TestCase):
-
-    def test_upper(self):
-        self.assertEqual('foo'.upper(), 'FOO')
-
-    def test_isupper(self):
-        self.assertTrue('FOO'.isupper())
-        self.assertFalse('Foo'.isupper())
-
-    def test_split(self):
-        s = 'hello world'
-        self.assertEqual(s.split(), ['hello', 'world'])
-        # check that s.split fails when the separator is not a string
-        with self.assertRaises(TypeError):
-            s.split(2)
+    ## TODO
+    # Test:
+    # build_json
+    # read_file
 
     ## OVERLAPS ##
     def test_overlap(self):
@@ -314,6 +304,9 @@ class TestStringMethods(unittest.TestCase):
         }
         self.assertIsNotNone(compute_diffs(i1, i2, "Test1", "Test2"))
 
+    ## build_json
+    # def test_build_json(self):
+    #     prettyPrint(build_json('test-annotation-1.anvil'))
 
     ## Combine Tracks oh jesus
     def test_collapse_tracks(self):
@@ -342,8 +335,50 @@ class TestStringMethods(unittest.TestCase):
                     "end": "2"
                 }
             },
+            "Metaphor.Type4": {
+                "0": {
+                    "Confidence": "",
+                    "start": "",
+                    "end": "",
+                }
+            }
         }
-        self.assertIsNotNone(collapse_tracks(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3']))
+
+
+        expected_output = {
+            "Metaphor.Type4": {
+                "0": {
+                    "Confidence": "",
+                    "end": "",
+                    "start": ""
+                }
+            },
+            "Metaphors": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "end": "1.3",
+                    "start": "0.2"
+                },
+                "1": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "end": "2",
+                    "start": "1"
+                },
+                "2": {
+                    "Confidence": "",
+                    "Metaphor": "test3",
+                    "end": "2",
+                    "start": "1"
+                }
+            }
+        }
+
+        actual_output = collapse_tracks(i1, "Metaphors", ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        self.assertEqual(actual_output.keys(), expected_output.keys())
+        self.assertEqual(actual_output.keys(), ["Metaphor.Type4", "Metaphors"])
+        self.assertEqual(actual_output["Metaphors"].keys(), expected_output["Metaphors"].keys())
 
 if __name__ == '__main__':
     unittest.main()

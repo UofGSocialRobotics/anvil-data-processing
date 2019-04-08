@@ -52,23 +52,33 @@ track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_d
 ######################################
 
 ## Takes json that has dict for all the tracks you want to
-## collapse, puts them all into one dict.
-def collapse_tracks(json_struct, tracks_to_collapse):
+## collapse, track name to collapse them into, and puts them all into one dict.
+def collapse_tracks(json_struct, trackname, tracks_to_collapse):
+    all_tracknames = json_struct.keys()
+
     dd = defaultdict(list)
     dics = []
 
     for track in tracks_to_collapse:
+        all_tracknames.remove(track)
         dics.append(json_struct[track])
-    # d1 = json_struct["Metaphor.Type1"]
-    # d2 = json_struct["Metaphor.Type2"]
-    # d3 = json_struct["Metaphor.Type3"]
-    # d4 = json_struct["Metaphor.Type4"]
 
     for dic in dics:
         for key, val in dic.iteritems():  # .items() in Python 3.
             dd[key].append(val)
 
-    prettyPrint(dd)
+    # change the array of collapsed items into a dict
+    # high key extremely proud of remembering this functional programming magic
+    # NOTE be wary of all the elements being in the "0" item in dd
+    zipped = dict(zip(map(str, range(0, len(dd["0"]))), dd["0"]))
+    dd[trackname] = zipped
+    dd.pop("0")
+
+    # add all the leftover elements that we didn't collapse
+    for leftover_track in all_tracknames:
+        dd[leftover_track] = json_struct[leftover_track]
+
+    # prettyPrint(dd)
 
     return dd
 
@@ -233,7 +243,6 @@ def read_file(fileName, comp_fileName):
     # might want to refactor this to include name
     json1 = build_json('test-annotation-1.anvil')
     json2 = build_json('test-annotation-2.anvil')
-
     return compute_diffs(json1, json2, fileName, comp_fileName)
 
 
