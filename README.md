@@ -14,7 +14,7 @@ General purpose python tool to JSON-ify ANVIL and compare two separate annotatio
 --correlate <track1> <track2> ...       # list of track names within file to calculate correlations between
 ```
 
-## Example: JSON-ifying data
+### Example: JSON-ifying data
 
 example usage of JSON-ifying ANVIL data
 `$ python countmetaphors.py -f annotator_1.anvil -o annotator_1.json`
@@ -63,7 +63,7 @@ JSON data (in annotator_1.json) will look like this:
 }
 ```
 
-## Example: Getting inter-annotator agreement
+### Example: Getting inter-annotator agreement
 ` $ python countmetaphors.py -f my_anvil_project.anvil -o my_cleaned_data_output.json `
 
 For instance 
@@ -164,6 +164,17 @@ So the example above may produce output such as
 Note that inter-annotator difference is computed by finding overlaps within the same track and searching for differences within them. 
 
 
-## Example: Getting intra-annotation statistics
+### Example: Getting intra-annotation statistics
  TODO
 
+
+## TESTING
+To run unit tests please run 
+```
+$ python unit-tests.py
+> ----------------------------------------------------------------------
+Ran 24 tests in 0.007s
+
+OK
+```
+if output is anything less than spectacular, yell loudly and file an issue in the repo. 
