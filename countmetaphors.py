@@ -78,6 +78,7 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
         for val in dd[str(i)]:
             dd["0"].append(val)
 
+
     # change the array of collapsed items into a dict
     # high key extremely proud of remembering this functional programming magic
     # NOTE be wary of all the elements being in the "0" item in dd

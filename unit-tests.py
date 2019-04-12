@@ -604,7 +604,137 @@ class TestStringMethods(unittest.TestCase):
         raw_agreement = compute_inter_annotator_agreement(i1, i2, raw_diff, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
         collapsed_agreement = compute_inter_annotator_agreement(i1_collapsed, i2_collapsed, collapsed_diff, ['Metaphor'])
 
+        self.assertEqual(raw_agreement, collapsed_agreement, 0.7)
+
+
+    def test_collapse_single_track(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                },
+                "1": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "3",
+                    "end": "4"
+                }
+            }
+        }
+        expected = {
+            "Metaphor": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "end": "2",
+                    "start": "1"
+                },
+                "1": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "end": "4",
+                    "start": "3"
+                }
+            }
+        }
+        i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1'])
+        self.assertEqual(i1_collapsed, expected)
+
+    def test_collapsed_agreement_is_raw_agreement_toy_null(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        raw_diff = compute_diffs(i1, i2)
+        i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
+        i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
+        collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
+        prettyPrint(raw_diff)
+        prettyPrint(collapsed_diff)
+        self.assertEqual(raw_diff, collapsed_diff)
+
+    def test_collapsed_agreement_is_raw_agreement_toy(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test1",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "3",
+                    "end": "4"
+                }
+            }
+        }
+        i2 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test3",
+                    "start": "1",
+                    "end": "2"
+                }
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Confidence": "",
+                    "Metaphor": "test2",
+                    "start": "1",
+                    "end": "2"
+                }
+            }
+        }
+        raw_diff = compute_diffs(i1, i2)
+        i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
+        i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
+        collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
+        self.assertEqual(count_diffs(raw_diff), count_diffs(collapsed_diff))
+        raw_agreement = compute_inter_annotator_agreement(i1, i2, raw_diff, ['Metaphor.Type1', 'Metaphor.Type2'])
+        collapsed_agreement = compute_inter_annotator_agreement(i1_collapsed, i2_collapsed, collapsed_diff, ['Metaphor'])
         self.assertEqual(raw_agreement, collapsed_agreement)
+
+
 
 if __name__ == '__main__':
     unittest.main()
