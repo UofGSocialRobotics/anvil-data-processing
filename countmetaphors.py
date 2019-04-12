@@ -56,6 +56,10 @@ track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_d
 
 ## Takes json that has dict for all the tracks you want to
 ## collapse, track name to collapse them into, and puts them all into one dict.
+## Pretty sure it sorts by start time too <3 <3
+## TODO test this. I think it actually doesn't, and instead relies on
+## annotators using convention that tracks that represent same thing will
+## be filled up from top to bottom
 def collapse_tracks(json_struct, trackname, tracks_to_collapse):
     all_tracknames = json_struct.keys()
 
@@ -94,6 +98,51 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
         dd[leftover_track] = json_struct[leftover_track]
 
     return dd
+
+
+# THIS ASSUMES THE TRACKS ARE IN TIME ORDER (which is how
+# they come out of the raw anvil file.)
+# TODO could make this order-agnostic, but you dont have
+# tons of time girl PRIORITIZE
+# takes a JSON-ified annotation file and a list of track names
+# to calculate correlations over
+# TODO this gives you something good
+def get_all_intratrack_correlations(json_struct, trackNames):
+    collapsed = collapse_tracks(json_struct, "Working", trackNames)
+    instances = collapsed["Working"]
+    num_instances = len(instances.keys())
+    j = 1
+    corr = []
+    for i in range(0, num_instances):
+        cur_elem = instances[str(i)]
+        # go through the rest while there are diffs
+        # checking for overlaps forwards
+        # need to check for start and end time as numbers
+        while j < num_instances and float(instances[str(j)]["start"]) < float(cur_elem["end"]):
+            print "FOUND OVERLAP"
+            for attribute in attributes_to_diff:
+                corr.append([cur_elem[attribute], instances[str(j)][attribute]])
+            # keep going
+            j += 1
+        # reset from next element. i will increment by 1 so we increment by 2
+        j = i + 2
+    return corr
+
+
+## So need to get total instances of a particular metaphor
+# given an annotation file and a set of track names to search over, searches
+# for number of times attribute attr has value attr_val
+def get_num_attribute_occurances(json_struct, trackNames, attr, attr_val):
+    count = 0
+    for trackName in trackNames:
+        for instance in json_struct[trackName].keys():
+            if(json_struct[trackName][instance][attr] == attr_val):
+                count += 1
+    return count
+
+## TODO have to figure out how to define "correlation" between metaphors.
+## I think I should define it as likelihood of 1 metaphor occuring given
+## that another metaphor has occurred
 
 
 ## so this deffo builds the json in a nice structure
@@ -306,13 +355,16 @@ def count_diffs(diffs):
     if(diffs == None):
         return 0
     total_diffs = 0
+    # for each diff
     for diff in diffs:
+        # track that has diffs
         for trackName in diff.keys():
             total_diffs += len(diff[trackName])
     return total_diffs
 
 # simple percentage calculation. Literally look at all total annotations, and see
 # how many disagreed.
+# TODO revisit this as a proper mechanism for determining agreement
 def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_to_diff):
     if(track_diffs == None):
         # there are no diffs, so agreement is auto-perfect

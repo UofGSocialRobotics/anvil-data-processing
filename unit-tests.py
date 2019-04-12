@@ -688,6 +688,11 @@ class TestStringMethods(unittest.TestCase):
         prettyPrint(collapsed_diff)
         self.assertEqual(raw_diff, collapsed_diff)
 
+
+    # TODO this test is broken. It should return 0
+    # what it should do is count as 2 diffs for every
+    # time there is an actual diff between the files,
+    # and one when there's no corresponding annotation found
     def test_collapsed_agreement_is_raw_agreement_toy(self):
         i1 = {
             "Metaphor.Type1": {
@@ -728,13 +733,91 @@ class TestStringMethods(unittest.TestCase):
         raw_diff = compute_diffs(i1, i2)
         i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
         i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
+        prettyPrint(raw_diff)
         collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
+        prettyPrint(collapsed_diff)
         self.assertEqual(count_diffs(raw_diff), count_diffs(collapsed_diff))
         raw_agreement = compute_inter_annotator_agreement(i1, i2, raw_diff, ['Metaphor.Type1', 'Metaphor.Type2'])
         collapsed_agreement = compute_inter_annotator_agreement(i1_collapsed, i2_collapsed, collapsed_diff, ['Metaphor'])
         self.assertEqual(raw_agreement, collapsed_agreement)
+        self.assertEqual(raw_agreement, 0.25)
+
+
+    ## Start testing intra-track correlation
+    def test_all_intracorrelation(self):
+        i1 = build_json('test-annotation-2.anvil')
+        expected = [
+            [
+                "abstract idea is concrete object",
+                "certain is firm"
+            ],
+            [
+                "certain is firm",
+                "importance is size"
+            ],
+            [
+                "change is motion",
+                "accessible is open"
+            ]
+        ]
+        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        self.assertEqual(corrs, expected)
+
+    ## Start testing intra-track correlation
+    def test_intracorrelation_calcs(self):
+        i1 = build_json('test-annotation-2.anvil')
+        expected = [
+            [
+                "abstract idea is concrete object",
+                "certain is firm"
+            ],
+            [
+                "certain is firm",
+                "importance is size"
+            ],
+            [
+                "change is motion",
+                "accessible is open"
+            ]
+        ]
+        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        self.assertEqual(corrs, expected)
 
 
 
+    def test_get_total_occurances_toy(self):
+        i1 = {
+            "Metaphor.Type1": {
+                "0": {
+                    "Metaphor": "certain is firm"
+                },
+                "1": {
+                    "Metaphor": "time is a line"
+                },
+                "2": {
+                    "Metaphor": "change is motion"
+                },
+            },
+            "Metaphor.Type2": {
+                "0": {
+                    "Metaphor": "certain is firm"
+                }
+            },
+            "Metaphor.Type3": {
+                "0": {
+                    "Metaphor": "abstract is concrete"
+                }
+            }
+        }
+        self.assertEqual(2, get_num_attribute_occurances(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], 'Metaphor', 'certain is firm'))
+
+
+
+    def test_get_total_occurances(self):
+        i1 = build_json('test-annotation-1.anvil')
+        self.assertEqual(1, get_num_attribute_occurances(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], 'Metaphor', 'certain is firm'))
+
+
+    ## TODO create a real file with more than one instance
 if __name__ == '__main__':
     unittest.main()
