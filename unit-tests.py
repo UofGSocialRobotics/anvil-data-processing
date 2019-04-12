@@ -821,7 +821,7 @@ class TestStringMethods(unittest.TestCase):
     def test_intracorrelation(self):
         i1 = build_json('test-annotation-1.anvil')
         correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
-        print correlations
+        prettyPrint(correlations)
         self.assertTrue(True)
 
     ## TODO create a real file with more than one instance

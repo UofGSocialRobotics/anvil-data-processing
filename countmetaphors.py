@@ -145,12 +145,12 @@ def get_num_attribute_occurances(json_struct, trackNames, attr, attr_val):
 def list_of_lists_to_list_of_sets(list_of_lists):
     l = []
     for elem in list_of_lists:
-        s = set()
-        for item in elem:
-            print item
-            s.add(item)
-        l.append(s)
+        l.append(set(elem))
     return l
+
+
+def dedupe_list_of_sets(L):
+    return [set(item) for item in set(frozenset(item) for item in L)]
 
 ## TODO have to figure out how to define "correlation" between metaphors.
 ## I think I should define it as likelihood of 1 metaphor occuring given
@@ -165,10 +165,23 @@ def list_of_lists_to_list_of_sets(list_of_lists):
 ## TODO I think correlation can just be determined like this?
 # P (A & B) / P(A) + P(B)
 def calc_correlation(json_struct, trackNames):
+    correlations = {}
     all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
     # can change all of these to sets?
     all_correlations = list_of_lists_to_list_of_sets(all_correlations)
-    return all_correlations
+    unique_correlations = dedupe_list_of_sets(all_correlations)
+
+    for corr in unique_correlations:
+        for item in corr:
+            # we're at individual metaphor level now
+            # get number of correlations
+            if item not in correlations.keys():
+                correlations[item] = {}
+            other_item = (corr - set(item)).pop()
+            # TODO modularize this
+            correlations[item][other_item] = all_correlations.count(corr) / get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
+
+    return correlations
 
 
 
