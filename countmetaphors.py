@@ -68,18 +68,27 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
         for key, val in dic.iteritems():  # .items() in Python 3.
             dd[key].append(val)
 
+
+    # collapse into one item if necessary
+    # start at 1, and this is how range works
+    pop_me_later = len(dd.keys())
+    for i in range(1, len(dd.keys())):
+        for val in dd[str(i)]:
+            dd["0"].append(val)
+
     # change the array of collapsed items into a dict
     # high key extremely proud of remembering this functional programming magic
     # NOTE be wary of all the elements being in the "0" item in dd
     zipped = dict(zip(map(str, range(0, len(dd["0"]))), dd["0"]))
     dd[trackname] = zipped
-    dd.pop("0")
+
+    # pop the extra tracks from the list conversion
+    for extra_track_number in range(0, pop_me_later):
+        dd.pop(str(extra_track_number))
 
     # add all the leftover elements that we didn't collapse
     for leftover_track in all_tracknames:
         dd[leftover_track] = json_struct[leftover_track]
-
-    # prettyPrint(dd)
 
     return dd
 
