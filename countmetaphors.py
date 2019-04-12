@@ -1,3 +1,4 @@
+from __future__ import division
 import argparse
 import sys
 import math
@@ -31,8 +32,7 @@ def build_diff_attributes(names, attributes):
 tracks_to_diff = [
     "Metaphor.Type1",
     "Metaphor.Type2",
-    "Metaphor.Type3",
-    "Metaphor.Type4",
+    "Metaphor.Type3"
 ]
 
 
@@ -267,25 +267,20 @@ def get_total_diffs(diffs):
     total_diffs = 0
     for diff in diffs:
         total_diffs += len(diff[diff.keys()[0]])
-        
+
     return total_diffs
 
-
-
+# yes this is a one-line function but I like the name and it
+# is helping me semantically remember what this is so lay off
+# my back, efficiency goblins
 def get_total_annotations_per_track(track):
-    total_annotations = 0
-    # only pay attention to the tracks we care about
-    for key in track.keys():
-        total_annotations += len(track[key])
+    return len(track.keys())
 
-    return total_annotations
 
 def get_total_annotations_per_annotator(json_struct, to_diff=tracks_to_diff):
     total_annotations = 0
-
     for track in to_diff:
         total_annotations += get_total_annotations_per_track(json_struct[track])
-
     return total_annotations
 
 # simple percentage calculation. Literally look at all total annotations, and see
@@ -309,8 +304,8 @@ def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
     if not track_diffs:
         return
     else:
-        print "diffs:"
-        prettyPrint(track_diffs)
+        # print "diffs:"
+        # prettyPrint(track_diffs)
         return track_diffs
 
 
@@ -318,10 +313,6 @@ def read_file(fileName, comp_fileName):
     # might want to refactor this to include name
     json1 = build_json('test-annotation-1.anvil')
     json2 = build_json('test-annotation-2.anvil')
-
-    prettyPrint(json1)
-    print
-    print
 
     diffs = compute_diffs(json1, json2, fileName, comp_fileName)
     prettyPrint(diffs)
@@ -335,10 +326,6 @@ if __name__ == "__main__":
     parser.add_argument('comp_file', nargs='?', type=argparse.FileType('r'))
     parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
                         default=sys.stdout)
-    parser.add_argument('--fuzzy', type=int, default=0,
-                        help='fuzzy match groups within N milliseconds')
-    parser.add_argument('--sortbytime', type=bool, default=False,
-                        help='order groups by starting timestamp')
 
     args = parser.parse_args()
     read_file(args.infile, args.comp_file)
