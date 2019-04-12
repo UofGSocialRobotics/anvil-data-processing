@@ -32,7 +32,8 @@ def build_diff_attributes(names, attributes):
 tracks_to_diff = [
     "Metaphor.Type1",
     "Metaphor.Type2",
-    "Metaphor.Type3"
+    "Metaphor.Type3",
+    "Metaphor"
 ]
 
 
@@ -41,6 +42,7 @@ attributes_to_diff = [
 ]
 
 track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
+
 
 
 
@@ -110,7 +112,6 @@ def build_json(fileName):
             json_structure[current_track][current_index]["start"] = elem.attrib["start"]
             json_structure[current_track][current_index]["end"] = elem.attrib["end"]
         elif(elem.tag == "attribute"):
-            #print elem.attrib
             json_structure[current_track][current_index][elem.attrib["name"]] = elem.text
 
     return(json_structure)
@@ -174,6 +175,7 @@ def overlaps(elem1, elem2):
 def compute_diffs_from_reference_track(reference_track, comparison_track, trackName, fn1, fn2):
     track_diffs = []
     try:
+        # TODO make track_attributes_to_diff dynamic
         track_to_diff = track_attributes_to_diff[trackName]
     # we don't actually care about diffing anything in this track
     except:
@@ -292,11 +294,26 @@ def get_total_annotations_per_annotator(json_struct, to_diff=tracks_to_diff):
         total_annotations += get_total_annotations_per_track(json_struct[track])
     return total_annotations
 
+
+# goes into diff array and counts number of diffs
+def count_diffs(diffs):
+    if(diffs == None):
+        return 0
+    total_diffs = 0
+    for diff in diffs:
+        for trackName in diff.keys():
+            total_diffs += len(diff[trackName])
+    return total_diffs
+
 # simple percentage calculation. Literally look at all total annotations, and see
 # how many disagreed.
 def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_to_diff):
+    if(track_diffs == None):
+        # there are no diffs, so agreement is auto-perfect
+        # TODO throw an error here instead
+        return 1
     total_annotations = get_total_annotations_per_annotator(json1, to_diff) + get_total_annotations_per_annotator(json2, to_diff)
-    return (total_annotations - len(track_diffs)) / total_annotations
+    return (total_annotations - count_diffs(track_diffs)) / total_annotations
 
 
 def compute_diffs(json1, json2, fn1="File1", fn2="File2"):

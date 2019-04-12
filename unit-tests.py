@@ -507,46 +507,107 @@ class TestStringMethods(unittest.TestCase):
     #     diffs = compute_diffs(i1, i2)
     #     self.assertEqual(0.7, compute_inter_annotator_agreement(i1, i2, diffs))
 
-    def test_collapse_file1(self):
-        expected = {
-            "Metaphor": {
-                "0": {
-                    "Confidence": "0",
-                    "Metaphor": "abstract idea is concrete object",
-                    "end": "3.64",
-                    "start": "1.64"
-                },
-                "1": {
-                    "Confidence": "0",
-                    "Metaphor": "certain is firm",
-                    "end": "4.92",
-                    "start": "2.8"
-                },
-                "2": {
-                    "Confidence": "0",
-                    "Metaphor": "change is motion",
-                    "end": "6.28",
-                    "start": "4.6"
-                },
-                "3": {
-                        "Confidence": "0",
-                        "Metaphor": "change is motion",
-                        "end": "13.12",
-                        "start": "11.52"
-                }
-            }
-        }
-        i1 = build_json('test-annotation-1.anvil')
-        i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
-        self.assertEqual(expected, i2)
+    # def test_collapse_file1(self):
+    #     expected = {
+    #         "Metaphor": {
+    #             "0": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "abstract idea is concrete object",
+    #                 "end": "3.64",
+    #                 "start": "1.64"
+    #             },
+    #             "1": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "certain is firm",
+    #                 "end": "4.92",
+    #                 "start": "2.8"
+    #             },
+    #             "2": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "change is motion",
+    #                 "end": "6.28",
+    #                 "start": "4.6"
+    #             },
+    #             "3": {
+    #                     "Confidence": "0",
+    #                     "Metaphor": "change is motion",
+    #                     "end": "13.12",
+    #                     "start": "11.52"
+    #             }
+    #         }
+    #     }
+    #     i1 = build_json('test-annotation-1.anvil')
+    #     i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+    #     self.assertEqual(expected, i2)
+    #
+    #
+    # def test_count_equals_collapsed_track(self):
+    #     i1 = build_json('test-annotation-1.anvil')
+    #     i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+    #     total_raw = get_total_annotations_per_annotator(i1)
+    #     total_collapsed = get_total_annotations_per_annotator(i2, ['Metaphor'])
+    #     self.assertEqual(total_raw, total_collapsed)
 
 
-    def test_count_equals_collapsed_track(self):
+    # def test_agreement_collapsed_same_track(self):
+    #     i1 = build_json('test-annotation-1.anvil')
+    #     i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+    #     expected = {
+    #         "Metaphor": {
+    #             "0": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "abstract idea is concrete object",
+    #                 "end": "3.64",
+    #                 "start": "1.64"
+    #             },
+    #             "1": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "certain is firm",
+    #                 "end": "4.92",
+    #                 "start": "2.8"
+    #             },
+    #             "2": {
+    #                 "Confidence": "0",
+    #                 "Metaphor": "change is motion",
+    #                 "end": "6.28",
+    #                 "start": "4.6"
+    #             },
+    #             "3": {
+    #                     "Confidence": "0",
+    #                     "Metaphor": "change is motion",
+    #                     "end": "13.12",
+    #                     "start": "11.52"
+    #             }
+    #         }
+    #     }
+    #     diffs = compute_diffs(i2, expected)
+    #     self.assertEqual(1, compute_inter_annotator_agreement(expected, i2, diffs, ['Metaphor']))
+
+    def test_collapsed_diff_count_is_same_as_raw_diff(self):
         i1 = build_json('test-annotation-1.anvil')
-        i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
-        total_raw = get_total_annotations_per_annotator(i1)
-        total_collapsed = get_total_annotations_per_annotator(i2, ['Metaphor'])
-        self.assertEqual(total_raw, total_collapsed)
+        i2 = build_json('test-annotation-2.anvil')
+        raw_diff = compute_diffs(i1, i2)
+        i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
+
+        prettyPrint(raw_diff)
+        prettyPrint(collapsed_diff)
+        self.assertEqual(count_diffs(raw_diff), count_diffs(collapsed_diff))
+
+
+    def test_collapsed_agreement_is_raw_agreement(self):
+        i1 = build_json('test-annotation-1.anvil')
+        i2 = build_json('test-annotation-2.anvil')
+        raw_diff = compute_diffs(i1, i2)
+        i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
+        raw_agreement = compute_inter_annotator_agreement(i1, i2, raw_diff, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        collapsed_agreement = compute_inter_annotator_agreement(i1_collapsed, i2_collapsed, collapsed_diff, ['Metaphor'])
+        prettyPrint(raw_diff)
+        prettyPrint(collapsed_diff)
+        self.assertEqual(raw_agreement, collapsed_agreement)
 
 if __name__ == '__main__':
     unittest.main()
