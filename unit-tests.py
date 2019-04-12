@@ -818,6 +818,12 @@ class TestStringMethods(unittest.TestCase):
         self.assertEqual(1, get_num_attribute_occurances(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], 'Metaphor', 'certain is firm'))
 
 
+    def test_intracorrelation(self):
+        i1 = build_json('test-annotation-1.anvil')
+        correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        print correlations
+        self.assertTrue(True)
+
     ## TODO create a real file with more than one instance
 if __name__ == '__main__':
     unittest.main()

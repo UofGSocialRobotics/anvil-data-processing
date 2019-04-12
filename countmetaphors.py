@@ -107,7 +107,7 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
 # takes a JSON-ified annotation file and a list of track names
 # to calculate correlations over
 # TODO this gives you something good
-def get_all_intratrack_correlations(json_struct, trackNames):
+def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attributes_to_diff):
     collapsed = collapse_tracks(json_struct, "Working", trackNames)
     instances = collapsed["Working"]
     num_instances = len(instances.keys())
@@ -120,12 +120,13 @@ def get_all_intratrack_correlations(json_struct, trackNames):
         # need to check for start and end time as numbers
         while j < num_instances and float(instances[str(j)]["start"]) < float(cur_elem["end"]):
             print "FOUND OVERLAP"
-            for attribute in attributes_to_diff:
+            for attribute in attrs_to_diff:
                 corr.append([cur_elem[attribute], instances[str(j)][attribute]])
             # keep going
             j += 1
         # reset from next element. i will increment by 1 so we increment by 2
         j = i + 2
+
     return corr
 
 
@@ -140,9 +141,35 @@ def get_num_attribute_occurances(json_struct, trackNames, attr, attr_val):
                 count += 1
     return count
 
+
+def list_of_lists_to_list_of_sets(list_of_lists):
+    l = []
+    for elem in list_of_lists:
+        s = set()
+        for item in elem:
+            print item
+            s.add(item)
+        l.append(s)
+    return l
+
 ## TODO have to figure out how to define "correlation" between metaphors.
 ## I think I should define it as likelihood of 1 metaphor occuring given
 ## that another metaphor has occurred
+## Correlation will not be symmetric!
+## One metaphor can make another more likely, but not necessarily the
+## other way around.
+# where A and B are metaphors,
+# Bayes: P(A|B) = (P(B|A)P(A)) / P(B)
+# P(A) = num occurances of A / total occurances
+# P(B) = num occurances of B / total occurances
+## TODO I think correlation can just be determined like this?
+# P (A & B) / P(A) + P(B)
+def calc_correlation(json_struct, trackNames):
+    all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
+    # can change all of these to sets?
+    all_correlations = list_of_lists_to_list_of_sets(all_correlations)
+    return all_correlations
+
 
 
 ## so this deffo builds the json in a nice structure
