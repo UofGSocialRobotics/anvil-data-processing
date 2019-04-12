@@ -181,6 +181,11 @@ def compute_diffs_from_reference_track(reference_track, comparison_track, trackN
     except:
         print 'Excluding diff calculation for track ' + trackName
         return []
+    try:
+        tracks_to_diff["attributes"]
+    except:
+        # TODO do this
+        print "Carolyn you need to make this dynamic"
     attributes_to_diff = track_to_diff["attributes"]
     # nested for loop, not my finest work.
     for elem1 in reference_track:
