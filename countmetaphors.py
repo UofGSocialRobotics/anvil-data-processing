@@ -257,15 +257,12 @@ def check_shape(json1, json2):
 
 def overlaps(elem1, elem2):
     ## check that start and end time overlap in some way
-    s1= elem1["start"]
-    s2= elem2["start"]
-    e1= elem1["end"]
-    e2= elem2["end"]
+    s1= float(elem1["start"])
+    s2= float(elem2["start"])
+    e1= float(elem1["end"])
+    e2= float(elem2["end"])
 
     overlaps = False
-    # majority of cases, get this out of the way
-    # if ((s1 > s2 and e1 > s2) or (s2 > s1 and e2 > s1)):
-    #     return False
     if (s1 >= s2 and e2 >= s1):
         overlaps = True
     elif (e1 >= s2 and e2 >= e1):
