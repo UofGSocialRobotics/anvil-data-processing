@@ -113,15 +113,22 @@ def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attri
     num_instances = len(instances.keys())
     j = 1
     corr = []
+    prettyPrint(collapsed)
     for i in range(0, num_instances):
         cur_elem = instances[str(i)]
+        prettyPrint(cur_elem)
         # go through the rest while there are diffs
         # checking for overlaps forwards
         # need to check for start and end time as numbers
-        while j < num_instances and float(instances[str(j)]["start"]) < float(cur_elem["end"]):
-            print "FOUND OVERLAP"
+        while (j < num_instances and overlaps(instances[str(j)], cur_elem)):
+            print j
+            print "think this overlaps:"
+            print instances[str(j)]
+            # check that it's not in wrong order
             for attribute in attrs_to_diff:
-                corr.append([cur_elem[attribute], instances[str(j)][attribute]])
+                # something can't be correlated with itself
+                if cur_elem[attribute] != instances[str(j)][attribute]:
+                    corr.append([cur_elem[attribute], instances[str(j)][attribute]])
             # keep going
             j += 1
         # reset from next element. i will increment by 1 so we increment by 2
@@ -167,18 +174,31 @@ def dedupe_list_of_sets(L):
 def calc_correlation(json_struct, trackNames):
     correlations = {}
     all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
+    # if there are NO correlations in these tracks
+    if not all_correlations:
+        print "returning"
+        return correlations
     # can change all of these to sets?
     all_correlations = list_of_lists_to_list_of_sets(all_correlations)
-    unique_correlations = dedupe_list_of_sets(all_correlations)
-
-    for corr in unique_correlations:
+    # unique_correlations = dedupe_list_of_sets(all_correlations)
+    print all_correlations
+    for corr in all_correlations:
+        # if something is "correlated" with itself (if an annotator overlaps
+        # the same value on two separate tracks)
+        if len(corr) < 2:
+            continue
         for item in corr:
             # we're at individual metaphor level now
             # get number of correlations
             if item not in correlations.keys():
                 correlations[item] = {}
-            other_item = (corr - set(item)).pop()
+            other_item = (corr - set([item])).pop()
             # TODO modularize this
+            print corr
+            print "all corr count"
+            print all_correlations.count(corr)
+            print "num instances"
+            print get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
             correlations[item][other_item] = all_correlations.count(corr) / get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
 
     return correlations
@@ -243,11 +263,10 @@ def overlaps(elem1, elem2):
     e2= elem2["end"]
 
     overlaps = False
-
     # majority of cases, get this out of the way
-    if (s1 > e2 or s2 > e1):
-        return False
-    elif (s1 >= s2 and e2 >= s1):
+    # if ((s1 > s2 and e1 > s2) or (s2 > s1 and e2 > s1)):
+    #     return False
+    if (s1 >= s2 and e2 >= s1):
         overlaps = True
     elif (e1 >= s2 and e2 >= e1):
         overlaps = True
