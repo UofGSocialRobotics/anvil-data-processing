@@ -1,0 +1,46 @@
+[
+    {
+        "Metaphor.Type1": [
+            {
+                "test-annotation-1.anvil": "No corresponding annotation found",
+                "test-annotation-2.anvil": {
+                    "Confidence": "0",
+                    "Metaphor": "time is a line",
+                    "end": "22",
+                    "start": "19.72"
+                }
+            }
+        ]
+    },
+    {
+        "Metaphor.Type2": [
+            {
+                "test-annotation-1.anvil": "No corresponding annotation found",
+                "test-annotation-2.anvil": {
+                    "Confidence": "0",
+                    "Metaphor": "accessible is open",
+                    "end": "14.88",
+                    "start": "12.56"
+                }
+            }
+        ]
+    },
+    {
+        "Metaphor.Type3": [
+            {
+                "test-annotation-1.anvil": {
+                    "Confidence": "0",
+                    "Metaphor": "change is motion",
+                    "end": "6.28",
+                    "start": "4.6"
+                },
+                "test-annotation-2.anvil": {
+                    "Confidence": "0",
+                    "Metaphor": "importance is size",
+                    "end": "6.28",
+                    "start": "4.6"
+                }
+            }
+        ]
+    }
+]

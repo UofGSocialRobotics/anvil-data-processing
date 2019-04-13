@@ -304,10 +304,6 @@ class TestStringMethods(unittest.TestCase):
         }
         self.assertIsNotNone(compute_diffs(i1, i2, "Test1", "Test2"))
 
-    ## build_json
-    # def test_build_json(self):
-    #     prettyPrint(build_json('test-annotation-1.anvil'))
-
     ## Combine Tracks oh jesus
     def test_collapse_tracks(self):
         i1 = {
@@ -453,7 +449,6 @@ class TestStringMethods(unittest.TestCase):
         i1 = build_json('test-annotation-1.anvil')
         i2 = build_json('test-annotation-2.anvil')
         diffs = compute_diffs(i1, i2)
-        prettyPrint(diffs)
         self.assertEqual(0.85, compute_inter_annotator_agreement(i1, i2, diffs, ['Metaphor.Type1']))
 
 
@@ -684,8 +679,6 @@ class TestStringMethods(unittest.TestCase):
         i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
         i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
         collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
-        prettyPrint(raw_diff)
-        prettyPrint(collapsed_diff)
         self.assertEqual(raw_diff, collapsed_diff)
 
 
@@ -733,9 +726,7 @@ class TestStringMethods(unittest.TestCase):
         raw_diff = compute_diffs(i1, i2)
         i1_collapsed = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
         i2_collapsed = collapse_tracks(i2, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2'])
-        prettyPrint(raw_diff)
         collapsed_diff = compute_diffs(i1_collapsed, i2_collapsed)
-        prettyPrint(collapsed_diff)
         self.assertEqual(count_diffs(raw_diff), count_diffs(collapsed_diff))
         raw_agreement = compute_inter_annotator_agreement(i1, i2, raw_diff, ['Metaphor.Type1', 'Metaphor.Type2'])
         collapsed_agreement = compute_inter_annotator_agreement(i1_collapsed, i2_collapsed, collapsed_diff, ['Metaphor'])
@@ -837,7 +828,6 @@ class TestStringMethods(unittest.TestCase):
 
 
     def test_intracorrelation_toy(self):
-        print "INTRACORRELATION TOY"
         i1 = {
             "Metaphor.Type1": {
                 "0": {
@@ -916,7 +906,6 @@ class TestStringMethods(unittest.TestCase):
         }
         expected = []
         correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
-        prettyPrint(correlations)
         self.assertEqual(correlations, expected)
 
     def test_get_correlations_multiple_corrs(self):
@@ -954,10 +943,6 @@ class TestStringMethods(unittest.TestCase):
         }
         expected = [['test1', 'test2'], ['test1', 'test2']]
         correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
-        print "CORRELATIONS:"
-        print correlations
-        corr_sets = list_of_lists_to_list_of_sets(correlations)
-        print(corr_sets)
         self.assertEqual(correlations, expected)
 
 

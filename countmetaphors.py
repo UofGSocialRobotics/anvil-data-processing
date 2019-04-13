@@ -113,17 +113,12 @@ def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attri
     num_instances = len(instances.keys())
     j = 1
     corr = []
-    prettyPrint(collapsed)
     for i in range(0, num_instances):
         cur_elem = instances[str(i)]
-        prettyPrint(cur_elem)
         # go through the rest while there are diffs
         # checking for overlaps forwards
         # need to check for start and end time as numbers
         while (j < num_instances and overlaps(instances[str(j)], cur_elem)):
-            print j
-            print "think this overlaps:"
-            print instances[str(j)]
             # check that it's not in wrong order
             for attribute in attrs_to_diff:
                 # something can't be correlated with itself
@@ -176,12 +171,9 @@ def calc_correlation(json_struct, trackNames):
     all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
     # if there are NO correlations in these tracks
     if not all_correlations:
-        print "returning"
         return correlations
     # can change all of these to sets?
     all_correlations = list_of_lists_to_list_of_sets(all_correlations)
-    # unique_correlations = dedupe_list_of_sets(all_correlations)
-    print all_correlations
     for corr in all_correlations:
         # if something is "correlated" with itself (if an annotator overlaps
         # the same value on two separate tracks)
@@ -194,11 +186,6 @@ def calc_correlation(json_struct, trackNames):
                 correlations[item] = {}
             other_item = (corr - set([item])).pop()
             # TODO modularize this
-            print corr
-            print "all corr count"
-            print all_correlations.count(corr)
-            print "num instances"
-            print get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
             correlations[item][other_item] = all_correlations.count(corr) / get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
 
     return correlations
@@ -211,7 +198,6 @@ def build_json(fileName):
     json_structure = {}
     current_track = ""
     for elem in tree.iter():
-        toPrint = [elem.tag, elem.text, elem.attrib]
         # relies on this being in order.
         if(elem.tag == "track"):
             current_track = elem.attrib["name"]
@@ -278,20 +264,17 @@ def overlaps(elem1, elem2):
 # check for overlaps, basically
 # if any item doesn't have an overlap, it's a difference
 # at first, assume independence. I can change it so it searches over all metaphors later.
-def compute_diffs_from_reference_track(reference_track, comparison_track, trackName, fn1, fn2):
+def compute_diffs_from_reference_track(reference_track, comparison_track, trackName, fn1, fn2, track_attributes_to_diff):
     track_diffs = []
-    try:
-        # TODO make track_attributes_to_diff dynamic
-        track_to_diff = track_attributes_to_diff[trackName]
-    # we don't actually care about diffing anything in this track
-    except:
-        print 'Excluding diff calculation for track ' + trackName
+    if trackName not in track_attributes_to_diff.keys():
+        print "Excluding diff calculation for track " + trackName
         return []
-    try:
-        tracks_to_diff["attributes"]
-    except:
-        # TODO do this
-        print "Carolyn you need to make this dynamic"
+
+    track_to_diff = track_attributes_to_diff[trackName]
+    if "attributes" not in track_to_diff.keys():
+        print "ERROR IN SPEC FILE, must supply track attributes to diff"
+        return []
+
     attributes_to_diff = track_to_diff["attributes"]
     # nested for loop, not my finest work.
     for elem1 in reference_track:
@@ -324,12 +307,12 @@ def compute_diffs_from_reference_track(reference_track, comparison_track, trackN
 
 
 ## hmm so right now this works but it's non-symmetric.
-def compute_diffs_per_track(track1, track2, trackName, fn1, fn2):
+def compute_diffs_per_track(track1, track2, trackName, fn1, fn2, attributes):
     # at first, assume independence. I can change it so it searches over all metaphors later.
     track_diffs = {}
     track_diffs[trackName] = []
-    track_diffs[trackName].append(compute_diffs_from_reference_track(track1, track2, trackName, fn1, fn2))
-    track_diffs[trackName].append(compute_diffs_from_reference_track(track2, track1, trackName, fn2, fn1))
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track1, track2, trackName, fn1, fn2, attributes))
+    track_diffs[trackName].append(compute_diffs_from_reference_track(track2, track1, trackName, fn2, fn1, attributes))
     track_diffs[trackName] = flatten(track_diffs[trackName])
     if not track_diffs[trackName]:
         # return None if empty list
@@ -346,13 +329,6 @@ def compute_diffs_per_track(track1, track2, trackName, fn1, fn2):
 
 
 #### TODO: implement cohen's kappa to calculate agreement if you have time
-# def count_instances_of_trackval(track, target_val):
-#     count = 0
-#     for key in track.keys():
-#         if track[key]["Metaphor"] == target_val:
-#             count += 1
-#     return count
-
 
 ## Use cohen's kappa to calculate inter-annotator agreement on tracks we pay attention to.
 ## information can be found here: https://en.wikipedia.org/wiki/Cohen%27s_kappa
@@ -370,27 +346,6 @@ def compute_diffs_per_track(track1, track2, trackName, fn1, fn2):
 #
 #     p_e = (1 / (math.pow(n, 2))) * math.sum()
 
-# diffs are formatted like this:
-# [
-#     {
-#         "Track1": [
-#             {diff},
-#             {diff},
-#         ]
-#     },
-#     {
-#         "Track2": [
-#             ...
-#         ]
-#     }
-# ]
-# so need to dig into structure a little more
-def get_total_diffs(diffs):
-    total_diffs = 0
-    for diff in diffs:
-        total_diffs += len(diff[diff.keys()[0]])
-
-    return total_diffs
 
 # yes this is a one-line function but I like the name and it
 # is helping me semantically remember what this is so lay off
@@ -398,13 +353,12 @@ def get_total_diffs(diffs):
 def get_total_annotations_per_track(track):
     return len(track.keys())
 
-
+# get total annotations for a json-ified annotation file
 def get_total_annotations_per_annotator(json_struct, to_diff=tracks_to_diff):
     total_annotations = 0
     for track in to_diff:
         total_annotations += get_total_annotations_per_track(json_struct[track])
     return total_annotations
-
 
 # goes into diff array and counts number of diffs
 def count_diffs(diffs):
@@ -430,42 +384,66 @@ def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_
     return (total_annotations - count_diffs(track_diffs)) / total_annotations
 
 
-def compute_diffs(json1, json2, fn1="File1", fn2="File2"):
+def compute_diffs(json1, json2, fn1="File1", fn2="File2", attributes=[]):
     if(not check_shape(json1, json2)):
         print "ERROR SHAPES ARE DIFFERENT"
         return
 
     track_diffs = []
+    # TODO could make this more efficient by listing tracks explicitly but meh
     for key in json1.keys():
-        diffs = compute_diffs_per_track(json1[key], json2[key], key, fn1, fn2)
+        diffs = compute_diffs_per_track(json1[key], json2[key], key, fn1, fn2, attributes)
         if diffs:
             track_diffs.append(diffs)
 
     if not track_diffs:
         return
     else:
-        # print "diffs:"
-        # prettyPrint(track_diffs)
         return track_diffs
 
 
-def read_file(fileName, comp_fileName):
+def diff_files(f1, f2, spec="diff-spec.json", outfile="test-output.json"):
     # might want to refactor this to include name
-    json1 = build_json('test-annotation-1.anvil')
-    json2 = build_json('test-annotation-2.anvil')
+    json1 = build_json(f1)
+    json2 = build_json(f2)
 
-    diffs = compute_diffs(json1, json2, fileName, comp_fileName)
-    prettyPrint(diffs)
-    return diffs
+    spec_data = {}
+    with open(spec, 'r') as s:
+        # TODO see if this unicode thing messes stuff up
+        spec_data = json.load(s)
+
+    diffs = compute_diffs(json1, json2, f1, f2, spec_data)
+    with open(outfile, 'w') as o:
+        json.dump(diffs, o, indent=4, separators=(',', ': '), sort_keys=True)
+        o.write('\n')
+
+    return
+
+def correlate(f1, specification, spec="correlation-spec.json", outfile="test-output.json"):
+    file_json = build_json(f1)
+    # TODO make this dynamic based on spec
+    correlations = calc_correlation(file_json, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+
+    with open(outfile, 'w') as o:
+        json.dump(correlations, o, indent=4, separators=(',', ': '), sort_keys=True)
+        o.write('\n')
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some inputs.')
-    parser.add_argument('infile', nargs='?', type=argparse.FileType('r'),
-                        default=sys.stdin)
-    parser.add_argument('comp_file', nargs='?', type=argparse.FileType('r'))
-    parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'),
-                        default=sys.stdout)
+    parser.add_argument('-f1')
+    parser.add_argument('-f2')
+    parser.add_argument('-o', default="output.json", help="output file to store results in. Defaults to output.json")
+    parser.add_argument('--diff', default=False, help="will look for spec that contains specifications for how to diff the annotations")
+    parser.add_argument('--correlate', default=False, help="will look for spec that contains specifications for how to correlate")
+    parser.add_argument('-spec', default="", help="name of specification file for correlation or diff")
 
     args = parser.parse_args()
-    read_file(args.infile, args.comp_file)
+    if args.diff:
+        if not args.f2:
+            print "Error: must provide file to diff with"
+        diff_files(args.f1, args.f2, args.spec, args.o)
+    elif args.correlate:
+        # if not args.spec:
+        #     print "Error: must provide a specification file to correlate with"
+        correlate(args.f1, args.spec, args.spec, args.o)

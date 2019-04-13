@@ -1,0 +1,22 @@
+{
+  "Metaphor.Type1": {
+    "attributes": [
+      "Metaphor"
+      ]
+    },
+  "Metaphor.Type2": {
+    "attributes": [
+      "Metaphor"
+    ]
+  },
+  "Metaphor.Type3": {
+    "attributes": [
+      "Metaphor"
+    ]
+  },
+  "Metaphor": {
+    "attributes": [
+      "Metaphor"
+    ]
+  }
+}
