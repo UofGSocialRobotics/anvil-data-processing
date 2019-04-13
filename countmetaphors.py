@@ -56,10 +56,6 @@ track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_d
 
 ## Takes json that has dict for all the tracks you want to
 ## collapse, track name to collapse them into, and puts them all into one dict.
-## Pretty sure it sorts by start time too <3 <3
-## TODO test this. I think it actually doesn't, and instead relies on
-## annotators using convention that tracks that represent same thing will
-## be filled up from top to bottom
 def collapse_tracks(json_struct, trackname, tracks_to_collapse):
     all_tracknames = json_struct.keys()
 
@@ -74,14 +70,12 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
         for key, val in dic.iteritems():  # .items() in Python 3.
             dd[key].append(val)
 
-
     # collapse into one item if necessary
     # start at 1, and this is how range works
     pop_me_later = len(dd.keys())
     for i in range(1, len(dd.keys())):
         for val in dd[str(i)]:
             dd["0"].append(val)
-
 
     # change the array of collapsed items into a dict
     # high key extremely proud of remembering this functional programming magic
@@ -106,7 +100,6 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
 # tons of time girl PRIORITIZE
 # takes a JSON-ified annotation file and a list of track names
 # to calculate correlations over
-# TODO this gives you something good
 def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attributes_to_diff):
     collapsed = collapse_tracks(json_struct, "Working", trackNames)
     instances = collapsed["Working"]
@@ -154,7 +147,6 @@ def list_of_lists_to_list_of_sets(list_of_lists):
 def dedupe_list_of_sets(L):
     return [set(item) for item in set(frozenset(item) for item in L)]
 
-## TODO have to figure out how to define "correlation" between metaphors.
 ## I think I should define it as likelihood of 1 metaphor occuring given
 ## that another metaphor has occurred
 ## Correlation will not be symmetric!
@@ -164,9 +156,9 @@ def dedupe_list_of_sets(L):
 # Bayes: P(A|B) = (P(B|A)P(A)) / P(B)
 # P(A) = num occurances of A / total occurances
 # P(B) = num occurances of B / total occurances
-## TODO I think correlation can just be determined like this?
 # P (A & B) / P(A) + P(B)
-def calc_correlation(json_struct, trackNames):
+# TODO explain "correlation" definition
+def calc_correlation(json_struct, trackNames, attribute="Metaphor"):
     correlations = {}
     all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
     # if there are NO correlations in these tracks
@@ -185,8 +177,7 @@ def calc_correlation(json_struct, trackNames):
             if item not in correlations.keys():
                 correlations[item] = {}
             other_item = (corr - set([item])).pop()
-            # TODO modularize this
-            correlations[item][other_item] = all_correlations.count(corr) / get_num_attribute_occurances(json_struct, trackNames, "Metaphor", item)
+            correlations[item][other_item] = all_correlations.count(corr) / get_num_attribute_occurances(json_struct, trackNames, attribute, item)
 
     return correlations
 
@@ -266,7 +257,13 @@ def overlaps(elem1, elem2):
 # at first, assume independence. I can change it so it searches over all metaphors later.
 def compute_diffs_from_reference_track(reference_track, comparison_track, trackName, fn1, fn2, track_attributes_to_diff):
     track_diffs = []
-    if trackName not in track_attributes_to_diff.keys():
+    # makes this far easier to test, but lines 261-265 are not strictly necessary
+    t_diffs = []
+    if type(track_attributes_to_diff) == list:
+        t_diffs = track_attributes_to_diff
+    else:
+        t_diffs = track_attributes_to_diff.keys()
+    if trackName not in t_diffs:
         print "Excluding diff calculation for track " + trackName
         return []
 
@@ -374,12 +371,9 @@ def count_diffs(diffs):
 
 # simple percentage calculation. Literally look at all total annotations, and see
 # how many disagreed.
-# TODO revisit this as a proper mechanism for determining agreement
 def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_to_diff):
     if(track_diffs == None):
-        # there are no diffs, so agreement is auto-perfect
-        # TODO throw an error here instead
-        return 1
+        return
     total_annotations = get_total_annotations_per_annotator(json1, to_diff) + get_total_annotations_per_annotator(json2, to_diff)
     return (total_annotations - count_diffs(track_diffs)) / total_annotations
 
@@ -390,7 +384,7 @@ def compute_diffs(json1, json2, fn1="File1", fn2="File2", attributes=[]):
         return
 
     track_diffs = []
-    # TODO could make this more efficient by listing tracks explicitly but meh
+
     for key in json1.keys():
         diffs = compute_diffs_per_track(json1[key], json2[key], key, fn1, fn2, attributes)
         if diffs:
@@ -403,13 +397,11 @@ def compute_diffs(json1, json2, fn1="File1", fn2="File2", attributes=[]):
 
 
 def diff_files(f1, f2, spec="diff-spec.json", outfile="test-output.json"):
-    # might want to refactor this to include name
     json1 = build_json(f1)
     json2 = build_json(f2)
 
     spec_data = {}
     with open(spec, 'r') as s:
-        # TODO see if this unicode thing messes stuff up
         spec_data = json.load(s)
 
     diffs = compute_diffs(json1, json2, f1, f2, spec_data)
@@ -421,8 +413,12 @@ def diff_files(f1, f2, spec="diff-spec.json", outfile="test-output.json"):
 
 def correlate(f1, specification, spec="correlation-spec.json", outfile="test-output.json"):
     file_json = build_json(f1)
-    # TODO make this dynamic based on spec
-    correlations = calc_correlation(file_json, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+
+    spec_data = {}
+    with open(spec, 'r') as s:
+        spec_data = json.load(s)
+
+    correlations = calc_correlation(file_json, spec_data["tracks"], spec_data["attribute"])
 
     with open(outfile, 'w') as o:
         json.dump(correlations, o, indent=4, separators=(',', ': '), sort_keys=True)
@@ -440,10 +436,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     if args.diff:
-        if not args.f2:
-            print "Error: must provide file to diff with"
+        if not args.f2 or not args.spec:
+            print "Error: must provide file to diff with and specification."
+            exit(1)
         diff_files(args.f1, args.f2, args.spec, args.o)
     elif args.correlate:
-        # if not args.spec:
-        #     print "Error: must provide a specification file to correlate with"
+        if not args.spec:
+            print "Error: must provide a specification file to correlate with."
+            exit(1)
         correlate(args.f1, args.spec, args.spec, args.o)

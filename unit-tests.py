@@ -951,6 +951,6 @@ class TestStringMethods(unittest.TestCase):
         i2 = {'end': '11', 'Confidence': '0', 'Metaphor': 'test1', 'start': '10'}
         self.assertFalse(overlaps(i1, i2))
 
-    ## TODO create a real file with more than one instance
+    ## TODO test on test-2 anvil because I think there's a bug in correlation calculation
 if __name__ == '__main__':
     unittest.main()
