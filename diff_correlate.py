@@ -396,6 +396,14 @@ def correlate_files(f1, specification, spec="correlation-spec.json", outfile="te
         o.write('\n')
 
 
+def jsonify_file(f1, outfile="test-output.json"):
+    file_json = build_json(f1)
+
+    with open(outfile, 'w') as o:
+        json.dump(file_json, o, indent=4, separators=(',', ': '), sort_keys=True)
+        o.write('\n')
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some inputs.')
     parser.add_argument('-f1')
@@ -403,6 +411,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', default="output.json", help="output file to store results in. Defaults to output.json")
     parser.add_argument('--diff', default=False, help="will look for spec that contains specifications for how to diff the annotations")
     parser.add_argument('--correlate', default=False, help="will look for spec that contains specifications for how to correlate")
+    parser.add_argument('--jsonify', default=False, help="just JSONify f1")
     parser.add_argument('-spec', default="", help="name of specification file for correlation or diff")
 
     args = parser.parse_args()
@@ -416,3 +425,8 @@ if __name__ == "__main__":
             print "Error: must provide a specification file to correlate with."
             exit(1)
         correlate_files(args.f1, args.spec, args.spec, args.o)
+    elif args.jsonify:
+        if not args.f1:
+            print "Error: no file provided"
+            exit(1)
+        jsonify_file(args.f1, args.o)
