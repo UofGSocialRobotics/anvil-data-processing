@@ -264,7 +264,6 @@ def compute_diffs_from_reference_track(reference_track, comparison_track, trackN
     else:
         t_diffs = track_attributes_to_diff.keys()
     if trackName not in t_diffs:
-        print "Excluding diff calculation for track " + trackName
         return []
 
     track_to_diff = track_attributes_to_diff[trackName]

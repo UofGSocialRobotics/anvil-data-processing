@@ -12,6 +12,38 @@ tracks_to_diff = [
 
 attribute_to_diff = "Metaphor"
 
+diff_spec = {
+  "Metaphor.Type1": {
+    "attributes": [
+      "Metaphor"
+      ]
+    },
+  "Metaphor.Type2": {
+    "attributes": [
+      "Metaphor"
+    ]
+  },
+  "Metaphor.Type3": {
+    "attributes": [
+      "Metaphor"
+    ]
+  },
+  "Metaphor": {
+    "attributes": [
+      "Metaphor"
+    ]
+  }
+}
+
+correlation_spec = {
+  "tracks": [
+    "Metaphor.Type1",
+    "Metaphor.Type2",
+    "Metaphor.Type3"
+  ],
+  "attribute": "Metaphor"
+}
+
 def build_diff_attributes(names, attributes):
     track_attributes_to_diff = {}
     for name in names:
@@ -566,6 +598,7 @@ class TestStringMethods(unittest.TestCase):
     def test_agreement_collapsed_same_track(self):
         i1 = build_json('test-annotation-1.anvil')
         i2 = collapse_tracks(i1, 'Metaphor', ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        prettyPrint(i2)
         expected = {
             "Metaphor": {
                 "0": {
@@ -594,8 +627,10 @@ class TestStringMethods(unittest.TestCase):
                 }
             }
         }
-        diffs = compute_diffs(i2, expected)
-        self.assertEqual(1, compute_inter_annotator_agreement(expected, i2, diffs, ['Metaphor']))
+        prettyPrint(expected)
+        diffs = compute_diffs(i2, expected, "File1", "File2", )
+        prettyPrint(diffs)
+        self.assertEqual(1, compute_inter_annotator_agreement(expected, i2, diffs, 'Metaphor'))
 
     def test_collapsed_diff_count_is_same_as_raw_diff(self):
         i1 = build_json('test-annotation-1.anvil')
