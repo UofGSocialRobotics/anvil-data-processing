@@ -19,29 +19,31 @@ def prettyPrint(uglyJson):
 
 
 ## Building globals
-def build_diff_attributes(names, attributes):
-    track_attributes_to_diff = {}
-    for name in names:
-        ta_to_d = {
-            "attributes": attributes
-        }
-        track_attributes_to_diff[name] = ta_to_d
-
-    return track_attributes_to_diff
-
-tracks_to_diff = [
-    "Metaphor.Type1",
-    "Metaphor.Type2",
-    "Metaphor.Type3",
-    "Metaphor"
-]
-
-
-attributes_to_diff = [
-    "Metaphor"
-]
-
-track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
+# def build_diff_attributes(names, attributes):
+#     track_attributes_to_diff = {}
+#     for name in names:
+#         ta_to_d = {
+#             "attributes": attributes
+#         }
+#         track_attributes_to_diff[name] = ta_to_d
+#
+#     return track_attributes_to_diff
+#
+# ### elements for unit tests
+# # TODO move this to unit tests
+# tracks_to_diff = [
+#     "Metaphor.Type1",
+#     "Metaphor.Type2",
+#     "Metaphor.Type3",
+#     "Metaphor"
+# ]
+#
+#
+# attributes_to_diff = [
+#     "Metaphor"
+# ]
+#
+# track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
 
 
 
@@ -100,7 +102,7 @@ def collapse_tracks(json_struct, trackname, tracks_to_collapse):
 # tons of time girl PRIORITIZE
 # takes a JSON-ified annotation file and a list of track names
 # to calculate correlations over
-def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attributes_to_diff):
+def get_all_intratrack_correlations(json_struct, trackNames, attr_to_diff):
     collapsed = collapse_tracks(json_struct, "Working", trackNames)
     instances = collapsed["Working"]
     num_instances = len(instances.keys())
@@ -112,11 +114,9 @@ def get_all_intratrack_correlations(json_struct, trackNames, attrs_to_diff=attri
         # checking for overlaps forwards
         # need to check for start and end time as numbers
         while (j < num_instances and overlaps(instances[str(j)], cur_elem)):
-            # check that it's not in wrong order
-            for attribute in attrs_to_diff:
-                # something can't be correlated with itself
-                if cur_elem[attribute] != instances[str(j)][attribute]:
-                    corr.append([cur_elem[attribute], instances[str(j)][attribute]])
+            # something can't be correlated with itself
+            if cur_elem[attr_to_diff] != instances[str(j)][attr_to_diff]:
+                corr.append([cur_elem[attr_to_diff], instances[str(j)][attr_to_diff]])
             # keep going
             j += 1
         # reset from next element. i will increment by 1 so we increment by 2
@@ -160,7 +160,7 @@ def dedupe_list_of_sets(L):
 # TODO explain "correlation" definition
 def calc_correlation(json_struct, trackNames, attribute="Metaphor"):
     correlations = {}
-    all_correlations = get_all_intratrack_correlations(json_struct, trackNames)
+    all_correlations = get_all_intratrack_correlations(json_struct, trackNames, attribute)
     # if there are NO correlations in these tracks
     if not all_correlations:
         return correlations
@@ -351,7 +351,7 @@ def get_total_annotations_per_track(track):
     return len(track.keys())
 
 # get total annotations for a json-ified annotation file
-def get_total_annotations_per_annotator(json_struct, to_diff=tracks_to_diff):
+def get_total_annotations_per_annotator(json_struct, to_diff):
     total_annotations = 0
     for track in to_diff:
         total_annotations += get_total_annotations_per_track(json_struct[track])
@@ -371,7 +371,7 @@ def count_diffs(diffs):
 
 # simple percentage calculation. Literally look at all total annotations, and see
 # how many disagreed.
-def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff=tracks_to_diff):
+def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff):
     if(track_diffs == None):
         return
     total_annotations = get_total_annotations_per_annotator(json1, to_diff) + get_total_annotations_per_annotator(json2, to_diff)

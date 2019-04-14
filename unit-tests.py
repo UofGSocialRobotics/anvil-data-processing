@@ -1,12 +1,31 @@
 import unittest
 from countmetaphors import *
 
+## Utils that make everything easier
+tracks_to_diff = [
+    "Metaphor.Type1",
+    "Metaphor.Type2",
+    "Metaphor.Type3",
+    "Metaphor"
+]
+
+
+attribute_to_diff = "Metaphor"
+
+def build_diff_attributes(names, attributes):
+    track_attributes_to_diff = {}
+    for name in names:
+        ta_to_d = {
+            "attributes": attributes
+        }
+        track_attributes_to_diff[name] = ta_to_d
+
+    return track_attributes_to_diff
+
+track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attribute_to_diff)
+
 
 class TestStringMethods(unittest.TestCase):
-    ## TODO
-    # Test:
-    # build_json
-    # read_file
 
     ## OVERLAPS ##
     def test_overlap(self):
@@ -751,7 +770,7 @@ class TestStringMethods(unittest.TestCase):
                 "accessible is open"
             ]
         ]
-        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(corrs, expected)
 
     ## Start testing intra-track correlation
@@ -771,7 +790,7 @@ class TestStringMethods(unittest.TestCase):
                 "accessible is open"
             ]
         ]
-        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        corrs = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(corrs, expected)
 
 
@@ -823,7 +842,7 @@ class TestStringMethods(unittest.TestCase):
                 "certain is firm": 0.5
             }
         }
-        correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(correlations, expected)
 
 
@@ -868,7 +887,7 @@ class TestStringMethods(unittest.TestCase):
                 "test1": 1.0
             }
         }
-        correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        correlations = calc_correlation(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(correlations, expected)
 
     def test_get_correlation_no_correlations(self):
@@ -905,7 +924,7 @@ class TestStringMethods(unittest.TestCase):
             }
         }
         expected = []
-        correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(correlations, expected)
 
     def test_get_correlations_multiple_corrs(self):
@@ -942,7 +961,7 @@ class TestStringMethods(unittest.TestCase):
             }
         }
         expected = [['test1', 'test2'], ['test1', 'test2']]
-        correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'])
+        correlations = get_all_intratrack_correlations(i1, ['Metaphor.Type1', 'Metaphor.Type2', 'Metaphor.Type3'], attribute_to_diff)
         self.assertEqual(correlations, expected)
 
 
