@@ -17,43 +17,13 @@ flatten = lambda l: [item for sublist in l for item in sublist]
 def prettyPrint(uglyJson):
     print(dumps(uglyJson, indent=4, sort_keys=True))
 
-
-## Building globals
-# def build_diff_attributes(names, attributes):
-#     track_attributes_to_diff = {}
-#     for name in names:
-#         ta_to_d = {
-#             "attributes": attributes
-#         }
-#         track_attributes_to_diff[name] = ta_to_d
-#
-#     return track_attributes_to_diff
-#
-# ### elements for unit tests
-# # TODO move this to unit tests
-# tracks_to_diff = [
-#     "Metaphor.Type1",
-#     "Metaphor.Type2",
-#     "Metaphor.Type3",
-#     "Metaphor"
-# ]
-#
-#
-# attributes_to_diff = [
-#     "Metaphor"
-# ]
-#
-# track_attributes_to_diff = build_diff_attributes(tracks_to_diff, attributes_to_diff)
-
-
-
-
 ############ CUSTOM STUFF ############
 ######################################
 ## Lots of custom stuff to collapse ##
 ## tracks into one so that we can   ##
 ## compare multiple metaphors on    ##
-## the same track                   ##
+## the same track. This is super    ##
+## modulear though!                 ##
 ######################################
 
 ## Takes json that has dict for all the tracks you want to
@@ -412,7 +382,7 @@ def diff_files(f1, f2, spec="diff-spec.json", outfile="test-output.json"):
 
     return
 
-def correlate(f1, specification, spec="correlation-spec.json", outfile="test-output.json"):
+def correlate_files(f1, specification, spec="correlation-spec.json", outfile="test-output.json"):
     file_json = build_json(f1)
 
     spec_data = {}
@@ -445,4 +415,4 @@ if __name__ == "__main__":
         if not args.spec:
             print "Error: must provide a specification file to correlate with."
             exit(1)
-        correlate(args.f1, args.spec, args.spec, args.o)
+        correlate_files(args.f1, args.spec, args.spec, args.o)

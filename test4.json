@@ -1,0 +1,18 @@
+{
+    "abstract idea is concrete object": {
+        "certain is firm": 1.0
+    },
+    "accessible is open": {
+        "change is motion": 1.0
+    },
+    "certain is firm": {
+        "abstract idea is concrete object": 1.0,
+        "importance is size": 1.0
+    },
+    "change is motion": {
+        "accessible is open": 1.0
+    },
+    "importance is size": {
+        "certain is firm": 1.0
+    }
+}
