@@ -372,7 +372,9 @@ def count_diffs(diffs):
 # how many disagreed.
 def compute_inter_annotator_agreement(json1, json2, track_diffs, to_diff):
     if(track_diffs == None):
-        return
+        # No diffs, perfect agreement
+        return 1
+
     total_annotations = get_total_annotations_per_annotator(json1, to_diff) + get_total_annotations_per_annotator(json2, to_diff)
     return (total_annotations - count_diffs(track_diffs)) / total_annotations
 
